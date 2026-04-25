@@ -5,6 +5,7 @@ import 'parent_dashboard.dart';
 import 'teacher_dashboard.dart';
 import 'admin_dashboard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum UserRole { student, parent, teacher, admin }
 
@@ -118,10 +119,32 @@ void _login() async {
   setState(() => _isLoading = true);
 
   try {
+    final email = _emailController.text.trim();
+
     await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: _emailController.text.trim(),
+      email: email,
       password: _passwordController.text.trim(),
     );
+
+    if (_selectedRole == UserRole.student && email != "student@gmail.com") {
+      _showSnack("Please use Student account");
+      return;
+    }
+
+    if (_selectedRole == UserRole.parent && email != "parent@gmail.com") {
+      _showSnack("Please use Parent account");
+      return;
+    }
+
+    if (_selectedRole == UserRole.teacher && email != "teacher@gmail.com") {
+      _showSnack("Please use Teacher account");
+      return;
+    }
+
+    if (_selectedRole == UserRole.admin && email != "admin@gmail.com") {
+      _showSnack("Please use Admin account");
+      return;
+    }
 
     Widget dashboard;
 
@@ -147,15 +170,9 @@ void _login() async {
       MaterialPageRoute(builder: (_) => dashboard),
     );
   } on FirebaseAuthException catch (e) {
-    print("FIREBASE ERROR: ${e.code}");
-
-    if (e.code == 'user-not-found') {
-      _showSnack("User not found");
-    } else if (e.code == 'wrong-password') {
-      _showSnack("Wrong password");
-    } else if (e.code == 'invalid-email') {
-      _showSnack("Invalid email format");
-    } else if (e.code == 'invalid-credential') {
+    if (e.code == 'invalid-credential' ||
+        e.code == 'wrong-password' ||
+        e.code == 'user-not-found') {
       _showSnack("Invalid email or password");
     } else {
       _showSnack(e.message ?? "Login failed");
