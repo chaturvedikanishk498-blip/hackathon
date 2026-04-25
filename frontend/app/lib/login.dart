@@ -4,6 +4,7 @@ import 'student_dashboard.dart';
 import 'parent_dashboard.dart';
 import 'teacher_dashboard.dart';
 import 'admin_dashboard.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 enum UserRole { student, parent, teacher, admin }
 
@@ -105,21 +106,25 @@ class _LogInScreenState extends State<LogInScreen>
     _cardController.forward();
   }
 
-  void _login() async {
-    if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      _showSnack('Please fill in all fields');
-      return;
-    }
-    
-    // Smooth Transition UI Fix: Unfocus keyboard right before taking action 
-    FocusScope.of(context).unfocus();
-    
-    setState(() => _isLoading = true);
-    
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-    
+
+void _login() async {
+  if (_emailController.text.trim().isEmpty ||
+      _passwordController.text.trim().isEmpty) {
+    _showSnack('Please fill in all fields');
+    return;
+  }
+
+  FocusScope.of(context).unfocus();
+  setState(() => _isLoading = true);
+
+  try {
+    await FirebaseAuth.instance.signInWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text.trim(),
+    );
+
     Widget dashboard;
+
     switch (_selectedRole) {
       case UserRole.student:
         dashboard = const StudentDashboard();
@@ -135,25 +140,35 @@ class _LogInScreenState extends State<LogInScreen>
         break;
     }
 
+    if (!mounted) return;
+
     Navigator.pushReplacement(
       context,
-      PageRouteBuilder(
-        pageBuilder: (_, __, ___) => dashboard,
-        transitionsBuilder: (_, anim, __, child) => FadeTransition(
-          opacity: anim,
-          child: SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(0.05, 0),
-              end: Offset.zero,
-            ).animate(CurvedAnimation(parent: anim, curve: Curves.easeOutCubic)),
-            child: child,
-          ),
-        ),
-        transitionDuration: const Duration(milliseconds: 500),
-      ),
+      MaterialPageRoute(builder: (_) => dashboard),
     );
-  }
+  } on FirebaseAuthException catch (e) {
+    print("FIREBASE ERROR: ${e.code}");
 
+    if (e.code == 'user-not-found') {
+      _showSnack("User not found");
+    } else if (e.code == 'wrong-password') {
+      _showSnack("Wrong password");
+    } else if (e.code == 'invalid-email') {
+      _showSnack("Invalid email format");
+    } else if (e.code == 'invalid-credential') {
+      _showSnack("Invalid email or password");
+    } else {
+      _showSnack(e.message ?? "Login failed");
+    }
+  } catch (e) {
+    print("ERROR: $e");
+    _showSnack("Something went wrong");
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
+    }
+  }
+}
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -231,7 +246,7 @@ class _LogInScreenState extends State<LogInScreen>
   Widget _buildBlobBackground(RoleConfig config) {
     return AnimatedBuilder(
       animation: _bgController,
-      builder: (_, __) {
+      builder: (_, _) {
         final t = _bgController.value;
         return Stack(
           children: [

@@ -252,7 +252,7 @@ class _StudentDashboardState extends State<StudentDashboard>
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: periods.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (_, i) {
               final p = periods[i];
               final isNow = i == 1;
@@ -744,7 +744,7 @@ class _StudentDashboardState extends State<StudentDashboard>
                              child: Text(m['type'] as String, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
                            ),
                            const SizedBox(height: 6),
-                           Text(m['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: const Color(0xFF1A1A2E))),
+                           Text(m['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E))),
                          ],
                        ),
                      ),

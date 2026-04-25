@@ -176,7 +176,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
           child: ListView.separated(
             scrollDirection: Axis.horizontal,
             itemCount: classes.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
             itemBuilder: (_, i) {
               final c = classes[i];
               final isNow = i == 0;

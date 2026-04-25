@@ -678,7 +678,7 @@ class _ParentDashboardState extends State<ParentDashboard>
                              ],
                            ),
                            const SizedBox(height: 6),
-                           Text(m['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: const Color(0xFF1A1A2E))),
+                           Text(m['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E))),
                          ],
                        ),
                      ),
