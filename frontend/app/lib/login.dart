@@ -3,9 +3,9 @@ import 'dart:math' as math;
 import 'student_dashboard.dart';
 import 'parent_dashboard.dart';
 import 'teacher_dashboard.dart';
+// import 'timetable_screen.dart';
 import 'admin_dashboard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum UserRole { student, parent, teacher, admin }
 
@@ -72,7 +72,7 @@ class _LogInScreenState extends State<LogInScreen>
   void initState() {
     super.initState();
     _bgController = AnimationController(
-       vsync: this,
+      vsync: this,
       duration: const Duration(seconds: 8),
     )..repeat(reverse: true);
 
@@ -84,9 +84,10 @@ class _LogInScreenState extends State<LogInScreen>
     _cardSlide = Tween<double>(begin: 30, end: 0).animate(
       CurvedAnimation(parent: _cardController, curve: Curves.easeOutCubic),
     );
-    _cardFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _cardController, curve: Curves.easeOut),
-    );
+    _cardFade = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _cardController, curve: Curves.easeOut));
 
     _cardController.forward();
   }
@@ -107,85 +108,93 @@ class _LogInScreenState extends State<LogInScreen>
     _cardController.forward();
   }
 
+  void _login() async {
+    if (_emailController.text.trim().isEmpty ||
+        _passwordController.text.trim().isEmpty) {
+      _showSnack('Please fill in all fields');
+      return;
+    }
 
-void _login() async {
-  if (_emailController.text.trim().isEmpty ||
-      _passwordController.text.trim().isEmpty) {
-    _showSnack('Please fill in all fields');
-    return;
+    FocusScope.of(context).unfocus();
+    setState(() => _isLoading = true);
+
+    try {
+      final email = _emailController.text.trim();
+
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: email,
+        password: _passwordController.text.trim(),
+      );
+
+      final studentEmails = [
+        "student@gmail.com",
+        "kanishk@gmail.com",
+        "harsh@gmail.com",
+      ];
+
+      if (_selectedRole == UserRole.student && !studentEmails.contains(email)) {
+        _showSnack("Please use Student account");
+        return;
+      }
+
+      final parentEmails = ["parent@gmail.com", "parent1@gmail.com"];
+
+      if (_selectedRole == UserRole.parent && !parentEmails.contains(email)) {
+        _showSnack("Please use Parent account");
+        return;
+      }
+
+      if (_selectedRole == UserRole.teacher && email != "teacher@gmail.com") {
+        _showSnack("Please use Teacher account");
+        return;
+      }
+
+      if (_selectedRole == UserRole.admin && email != "admin@gmail.com") {
+        _showSnack("Please use Admin account");
+        return;
+      }
+
+      Widget dashboard;
+
+      switch (_selectedRole) {
+        case UserRole.student:
+          dashboard = const StudentDashboard();
+          break;
+        case UserRole.parent:
+          dashboard = const ParentDashboard();
+          break;
+        case UserRole.teacher:
+          dashboard = const TeacherDashboard();
+          break;
+        case UserRole.admin:
+          dashboard = const AdminDashboard();
+          break;
+      }
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => dashboard),
+      );
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'invalid-credential' ||
+          e.code == 'wrong-password' ||
+          e.code == 'user-not-found') {
+        _showSnack("Invalid email or password");
+      } else {
+        _showSnack(e.message ?? "Login failed");
+      }
+    } catch (e) {
+      print("ERROR: $e");
+      _showSnack("Something went wrong");
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
 
-  FocusScope.of(context).unfocus();
-  setState(() => _isLoading = true);
-
-  try {
-    final email = _emailController.text.trim();
-
-    await FirebaseAuth.instance.signInWithEmailAndPassword(
-      email: email,
-      password: _passwordController.text.trim(),
-    );
-
-    if (_selectedRole == UserRole.student && email != "student@gmail.com") {
-      _showSnack("Please use Student account");
-      return;
-    }
-
-    if (_selectedRole == UserRole.parent && email != "parent@gmail.com") {
-      _showSnack("Please use Parent account");
-      return;
-    }
-
-    if (_selectedRole == UserRole.teacher && email != "teacher@gmail.com") {
-      _showSnack("Please use Teacher account");
-      return;
-    }
-
-    if (_selectedRole == UserRole.admin && email != "admin@gmail.com") {
-      _showSnack("Please use Admin account");
-      return;
-    }
-
-    Widget dashboard;
-
-    switch (_selectedRole) {
-      case UserRole.student:
-        dashboard = const StudentDashboard();
-        break;
-      case UserRole.parent:
-        dashboard = const ParentDashboard();
-        break;
-      case UserRole.teacher:
-        dashboard = const TeacherDashboard();
-        break;
-      case UserRole.admin:
-        dashboard = const AdminDashboard();
-        break;
-    }
-
-    if (!mounted) return;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (_) => dashboard),
-    );
-  } on FirebaseAuthException catch (e) {
-    if (e.code == 'invalid-credential' ||
-        e.code == 'wrong-password' ||
-        e.code == 'user-not-found') {
-      _showSnack("Invalid email or password");
-    } else {
-      _showSnack(e.message ?? "Login failed");
-    }
-  } catch (e) {
-    print("ERROR: $e");
-    _showSnack("Something went wrong");
-  } finally {
-    if (mounted) {
-      setState(() => _isLoading = false);
-    }
-  }
-}
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -207,10 +216,8 @@ void _login() async {
         color: config.bgColor,
         child: Stack(
           children: [
-            // Animated Background Blobs 
-            Positioned.fill(
-              child: _buildBlobBackground(config),
-            ),
+            // Animated Background Blobs
+            Positioned.fill(child: _buildBlobBackground(config)),
             // Safe flexible layout mapping (Fixes constrained/flex bugs when keyboard pops up in ScrollViews)
             SafeArea(
               child: LayoutBuilder(
@@ -243,7 +250,10 @@ void _login() async {
                               ),
                             ),
                             child: Padding(
-                              padding: const EdgeInsets.only(bottom: 24, top: 24),
+                              padding: const EdgeInsets.only(
+                                bottom: 24,
+                                top: 24,
+                              ),
                               child: _buildLoginCard(config),
                             ),
                           ),
@@ -293,10 +303,7 @@ void _login() async {
       duration: const Duration(milliseconds: 500),
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 
@@ -316,19 +323,24 @@ void _login() async {
             borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: _roleConfigs[_selectedRole]!.accentColor.withOpacity(0.4),
+                color: _roleConfigs[_selectedRole]!.accentColor.withOpacity(
+                  0.4,
+                ),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
             ],
           ),
           child: const Center(
-            child: Text('EC', style: TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.w800,
-              letterSpacing: -0.5,
-            )),
+            child: Text(
+              'EC',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.5,
+              ),
+            ),
           ),
         ),
         const SizedBox(height: 14),
@@ -378,7 +390,8 @@ void _login() async {
             final isSelected = _selectedRole == role;
             return Expanded(
               child: GestureDetector(
-                behavior: HitTestBehavior.opaque, // Critical optimization for fully transparent Tap spaces
+                behavior: HitTestBehavior
+                    .opaque, // Critical optimization for fully transparent Tap spaces
                 onTap: () => _switchRole(role),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
@@ -394,7 +407,7 @@ void _login() async {
                               color: rc.accentColor.withOpacity(0.35),
                               blurRadius: 12,
                               offset: const Offset(0, 4),
-                            )
+                            ),
                           ]
                         : null,
                   ),
@@ -657,8 +670,11 @@ void _login() async {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_rounded,
-                        color: Colors.white, size: 18),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                   ],
                 ),
         ),

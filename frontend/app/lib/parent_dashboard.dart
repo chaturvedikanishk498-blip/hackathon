@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Added for Haptic Feedback
+import 'package:firebase_auth/firebase_auth.dart'; // Added for dynamic user
 import 'login.dart';
-// 🔹 Import the new AI Chat Screen
+
+// 🔹 Import the AI Chat Screen
 import 'ai_chat_screen.dart';
+
+// 🔹 Import the Bus Tracking Screen
+import 'screens/bus_tracking_screen.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -23,11 +28,39 @@ class _ParentDashboardState extends State<ParentDashboard>
   static const Color bgColor = Color(0xFFECFDF5);
   static const Color cardBg = Colors.white;
 
-  final List<Map<String, dynamic>> _children = [
-    {'name': 'Priya Sharma', 'class': 'Class X - A', 'emoji': '👧', 'attendance': 94, 'gpa': 8.7},
-    // 🔹 Lowered Arjun's attendance to 72% to trigger the Smart Alert UI
-    {'name': 'Arjun Sharma', 'class': 'Class VII - B', 'emoji': '👦', 'attendance': 72, 'gpa': 7.9},
-  ];
+  // 🔹 Parent Profiles Mock Data
+  final Map<String, Map<String, dynamic>> _parentProfiles = {
+    'parent1@gmail.com': {
+      'parentName': 'Amit Verma',
+      'children': [
+        {'name': 'Rohan Verma', 'class': 'Class IX - B', 'emoji': '👦', 'attendance': 55, 'gpa': 8.2},
+      ],
+      'notifications': [
+        {'title': 'CRITICAL: Risk alert due to low attendance', 'type': 'High', 'time': '1h ago', 'color': const Color(0xFFFC5C7D), 'icon': Icons.warning_rounded},
+        {'title': 'Physics remedial class scheduled', 'type': 'Medium', 'time': '3h ago', 'color': const Color(0xFFFF8008), 'icon': Icons.menu_book_rounded},
+      ]
+    },
+    'default': {
+      'parentName': 'Rajesh Sharma',
+      'children': [
+        {'name': 'Priya Sharma', 'class': 'Class X - A', 'emoji': '👧', 'attendance': 94, 'gpa': 8.7},
+        {'name': 'Arjun Sharma', 'class': 'Class VII - B', 'emoji': '👦', 'attendance': 72, 'gpa': 7.9},
+      ],
+      'notifications': [
+        {'title': 'Urgent: Tomorrow is a public holiday due to heavy rains', 'type': 'High', 'time': '1h ago', 'color': const Color(0xFFFC5C7D), 'icon': Icons.priority_high_rounded},
+        {'title': 'Science project progress requested by Mr. Verma', 'type': 'Medium', 'time': '9:30 AM', 'color': const Color(0xFFFF8008), 'icon': Icons.assignment_rounded},
+        {'title': 'School Annual monthly newsletter published', 'type': 'Low', 'time': 'Yesterday', 'color': const Color(0xFF11998E), 'icon': Icons.mail_outline_rounded},
+      ]
+    }
+  };
+
+  // 🔹 Dynamic Getters based on FirebaseAuth
+  String get _currentUserEmail => FirebaseAuth.instance.currentUser?.email ?? '';
+  Map<String, dynamic> get _currentProfile => _parentProfiles[_currentUserEmail] ?? _parentProfiles['default']!;
+  
+  List<Map<String, dynamic>> get _children => _currentProfile['children'] as List<Map<String, dynamic>>;
+  String get _parentName => _currentProfile['parentName'] as String;
+  List<Map<String, dynamic>> get _currentNotifications => _currentProfile['notifications'] as List<Map<String, dynamic>>;
 
   @override
   void initState() {
@@ -46,22 +79,26 @@ class _ParentDashboardState extends State<ParentDashboard>
 
   @override
   Widget build(BuildContext context) {
+    // Ensure selected child is within bounds when switching accounts
+    if (_selectedChild >= _children.length) {
+      _selectedChild = 0;
+    }
+    
     final child = _children[_selectedChild];
+    
     return Scaffold(
       backgroundColor: bgColor,
-      // 💡 IndexedStack allows seamless switching between bottom navigation tabs without losing state
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildDashboardContent(child), // Tab 0: Home Page
-          _buildPlaceholderScreen("Child Reports & Progress"), // Tab 1: Child info
-          _buildPlaceholderScreen("Fee Management Center"), // Tab 2: Fees
-          _buildPlaceholderScreen("School Messages Inbox"), // Tab 3: Messages 
+          _buildDashboardContent(child), 
+          _buildPlaceholderScreen("Child Reports & Progress"), 
+          _buildPlaceholderScreen("Fee Management Center"), 
+          _buildPlaceholderScreen("School Messages Inbox"), 
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
       
-      // 🔹 New AI Chat Button Floating on Dashboard
       floatingActionButton: _selectedIndex == 0 
           ? FloatingActionButton(
               onPressed: () {
@@ -76,7 +113,6 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // Wrapped the dashboard in its own modular method to facilitate tab-switching
   Widget _buildDashboardContent(Map<String, dynamic> child) {
     return CustomScrollView(
       slivers: [
@@ -90,7 +126,6 @@ class _ParentDashboardState extends State<ParentDashboard>
                 const SizedBox(height: 20),
                 _buildChildSelector(),
                 
-                // 🔹 Smart Attendance Alert (Conditional based on attendance < 75)
                 if ((child['attendance'] as int) < 75) ...[
                   const SizedBox(height: 22),
                   _buildSmartAttendanceAlert(child),
@@ -100,13 +135,17 @@ class _ParentDashboardState extends State<ParentDashboard>
                 _buildQuickStats(child),
                 const SizedBox(height: 22),
                 
-                // 🔹 AI Insights Card
+                // 🔹 Safe Route Bus Tracking
+                _buildSectionTitle("Safe Route Tracker 🚌"),
+                const SizedBox(height: 14),
+                _buildBusTrackingCard(child),
+                const SizedBox(height: 22),
+
                 _buildSectionTitle("AI Insights ✨"),
                 const SizedBox(height: 14),
                 _buildAIInsightsCard(child),
                 const SizedBox(height: 22),
 
-                // 🔹 Study Suggestions Card
                 _buildSectionTitle("Study Suggestions 📚"),
                 const SizedBox(height: 14),
                 _buildStudySuggestionsCard(child),
@@ -123,12 +162,11 @@ class _ParentDashboardState extends State<ParentDashboard>
                 _buildFeeCard(),
                 const SizedBox(height: 22),
 
-                // 🔹 Smart Notifications Section with Priority Tags
                 _buildSectionTitle("Smart Notifications 🔔"),
                 const SizedBox(height: 14),
                 _buildSmartNotifications(),
                 
-                const SizedBox(height: 100), // Spacing for floating action button
+                const SizedBox(height: 100), 
               ],
             ),
           ),
@@ -208,9 +246,9 @@ class _ParentDashboardState extends State<ParentDashboard>
                     ),
                   ),
                   const SizedBox(height: 8),
-                  const Text(
-                    'Hello,\nRajesh Sharma! 🙏',
-                    style: TextStyle(
+                  Text(
+                    'Hello,\n$_parentName! 🙏',
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 26,
                       fontWeight: FontWeight.w800,
@@ -301,8 +339,10 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 New UI: Smart Attendance Alert
   Widget _buildSmartAttendanceAlert(Map<String, dynamic> child) {
+    int attendance = child['attendance'] as int;
+    bool isCritical = attendance <= 60;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -327,13 +367,15 @@ class _ParentDashboardState extends State<ParentDashboard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Action Required: Low Attendance',
-                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFFFC5C7D)),
+                Text(
+                  isCritical ? 'Risk Alert: Critically Low Attendance' : 'Action Required: Low Attendance',
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFFFC5C7D)),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  '${child['name'].split(" ").first}\'s attendance dropped to ${child['attendance']}% this week. Please ensure regular attendance to maintain academic steady growth.',
+                  isCritical 
+                      ? 'Your ward\'s attendance is critically low at $attendance%. Immediate parental intervention recommended to prevent academic risks.'
+                      : '${child['name'].split(" ").first}\'s attendance dropped to $attendance% this week. Please ensure regular attendance to maintain academic steady growth.',
                   style: const TextStyle(fontSize: 13, color: Color(0xFF1A1A2E), height: 1.3),
                 ),
               ],
@@ -386,12 +428,78 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 New UI: AI Insights Content Based on GPA Dynamically
+  Widget _buildBusTrackingCard(Map<String, dynamic> child) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF2575FC), Color(0xFF6A11CB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(color: const Color(0xFF2575FC).withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6)),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () {
+            HapticFeedback.lightImpact();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => BusTrackingScreen(childName: child['name'] as String)),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+                  child: const Icon(Icons.directions_bus_rounded, color: Colors.white, size: 28),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Live Bus Tracking',
+                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${child['name'].split(" ").first}\'s Bus is on the way • ETA: 10 mins',
+                        style: const TextStyle(color: Colors.white70, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 16),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildAIInsightsCard(Map<String, dynamic> child) {
-    bool isImproving = child['gpa'] >= 8.0;
-    String insightText = isImproving 
-        ? 'Your child is improving in Maths & Science rapidly. Overall engagement is up by 15% this month!' 
-        : '${child['name'].split(" ").first} has been struggling slightly in recent physics tests. Extra focus is suggested.';
+    int attendance = child['attendance'] as int;
+    bool isCritical = attendance <= 60;
+    bool isImproving = child['gpa'] >= 8.0 && !isCritical;
+    
+    String insightText;
+    if (isCritical) {
+      insightText = 'Risk alert due to low attendance! ${child['name'].split(" ").first}\'s performance in Physics is suffering because of high absenteeism. Immediate attention required.';
+    } else if (isImproving) {
+      insightText = 'Your child is improving in Maths & Science rapidly. Overall engagement is up by 15% this month!';
+    } else {
+      insightText = '${child['name'].split(" ").first} has been struggling slightly in recent physics tests. Extra focus is suggested.';
+    }
     
     return Container(
       padding: const EdgeInsets.all(18),
@@ -434,11 +542,22 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 New UI: Relevant Study Suggestions
   Widget _buildStudySuggestionsCard(Map<String, dynamic> child) {
-    List<String> suggestions = (child['gpa'] >= 8.0) 
-        ? ['Participate in Advanced Math prep', 'Solve 2 complex logic puzzles daily']
-        : ['Focus more on Science core concepts', 'Revise daily for 1 hour extra', 'Consult with Mr. Verma for help'];
+    int attendance = child['attendance'] as int;
+    bool isCritical = attendance <= 60;
+
+    List<String> suggestions;
+    if (isCritical) {
+      suggestions = [
+        'Mandatory meeting with the class teacher required',
+        'Review missed Physics concepts from chapters 4 & 5',
+        'Establish a strict daily attendance routine'
+      ];
+    } else if (child['gpa'] >= 8.0) {
+      suggestions = ['Participate in Advanced Math prep', 'Solve 2 complex logic puzzles daily'];
+    } else {
+      suggestions = ['Focus more on Science core concepts', 'Revise daily for 1 hour extra', 'Consult with Mr. Verma for help'];
+    }
 
     return Column(
       children: suggestions.map((s) {
@@ -470,6 +589,8 @@ class _ParentDashboardState extends State<ParentDashboard>
 
   Widget _buildAttendanceCard(Map<String, dynamic> child) {
     final pct = (child['attendance'] as int) / 100;
+    bool isCritical = (child['attendance'] as int) <= 60;
+
     return Container(
       decoration: BoxDecoration(
         color: cardBg,
@@ -480,7 +601,7 @@ class _ParentDashboardState extends State<ParentDashboard>
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(22),
-          onTap: () => HapticFeedback.lightImpact(), // View detailed attendance
+          onTap: () => HapticFeedback.lightImpact(), 
           child: Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
@@ -506,9 +627,9 @@ class _ParentDashboardState extends State<ParentDashboard>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _attendancePill('Present', '22', primary),
-                    _attendancePill('Absent', '1', const Color(0xFFFC5C7D)),
-                    _attendancePill('Late', '1', const Color(0xFFFF8008)),
+                    _attendancePill('Present', isCritical ? '12' : '22', primary),
+                    _attendancePill('Absent', isCritical ? '9' : '1', const Color(0xFFFC5C7D)),
+                    _attendancePill('Late', isCritical ? '3' : '1', const Color(0xFFFF8008)),
                   ],
                 ),
               ],
@@ -628,13 +749,8 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 New UI: Smart Notifications replacing regular messages format
   Widget _buildSmartNotifications() {
-    final msgs = [
-      {'title': 'Urgent: Tomorrow is a public holiday due to heavy rains', 'type': 'High', 'time': '1h ago', 'color': const Color(0xFFFC5C7D), 'icon': Icons.priority_high_rounded},
-      {'title': 'Science project progress requested by Mr. Verma', 'type': 'Medium', 'time': '9:30 AM', 'color': const Color(0xFFFF8008), 'icon': Icons.assignment_rounded},
-      {'title': 'School Annual monthly newsletter published', 'type': 'Low', 'time': 'Yesterday', 'color': primary, 'icon': Icons.mail_outline_rounded},
-    ];
+    final msgs = _currentNotifications;
     
     return Column(
       children: msgs.map((m) {
@@ -696,7 +812,6 @@ class _ParentDashboardState extends State<ParentDashboard>
     return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E), letterSpacing: -0.3));
   }
 
-  // 🔹 The fully restored Top/Bottom Navigation Bar logic
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.home_rounded, 'label': 'Home'},
