@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for Haptic Feedback
-import 'package:firebase_auth/firebase_auth.dart'; // Added for dynamic user
+import 'package:flutter/services.dart'; 
+import 'package:firebase_auth/firebase_auth.dart'; 
 import 'login.dart';
 
 // 🔹 Import the AI Chat Screen
@@ -8,6 +8,10 @@ import 'ai_chat_screen.dart';
 
 // 🔹 Import the Bus Tracking Screen
 import 'screens/bus_tracking_screen.dart';
+
+// 🔹 Import New Screens
+import 'screens/parent_notification_screen.dart';
+import 'screens/teacher_meeting_screen.dart';
 
 class ParentDashboard extends StatefulWidget {
   const ParentDashboard({super.key});
@@ -79,7 +83,6 @@ class _ParentDashboardState extends State<ParentDashboard>
 
   @override
   Widget build(BuildContext context) {
-    // Ensure selected child is within bounds when switching accounts
     if (_selectedChild >= _children.length) {
       _selectedChild = 0;
     }
@@ -151,12 +154,38 @@ class _ParentDashboardState extends State<ParentDashboard>
                 _buildStudySuggestionsCard(child),
                 const SizedBox(height: 22),
 
+                // 🔹 NEW: Connect with School (Meeting Scheduler)
+                _buildSectionTitle("Connect with School 🏫"),
+                const SizedBox(height: 14),
+                _buildTeacherMeetingCard(child),
+                const SizedBox(height: 22),
+
+                // 🔹 NEW: Hackathon Feature - Parent Action Plan
+                _buildSectionTitle("Parent Action Plan 🎯"),
+                const SizedBox(height: 14),
+                _buildParentActionPlan(child),
+                const SizedBox(height: 22),
+
+                // 🔹 NEW: Hackathon Feature - Wellbeing & Stress Alert
+                _buildSectionTitle("Wellbeing & Stress Alert 💚"),
+                const SizedBox(height: 14),
+                _buildWellbeingAlert(child),
+                const SizedBox(height: 22),
+
+                // 🔹 NEW: Hackathon Feature - Teacher Recommendation
+                _buildSectionTitle("Teacher Recommendation 💡"),
+                const SizedBox(height: 14),
+                _buildTeacherRecommendation(child),
+                const SizedBox(height: 22),
+
                 _buildAttendanceCard(child),
                 const SizedBox(height: 22),
+                
                 _buildSectionTitle("Recent Activities"),
                 const SizedBox(height: 14),
                 _buildRecentActivities(),
                 const SizedBox(height: 22),
+                
                 _buildSectionTitle("Fee Status"),
                 const SizedBox(height: 14),
                 _buildFeeCard(),
@@ -188,6 +217,8 @@ class _ParentDashboardState extends State<ParentDashboard>
           tooltip: 'Notifications',
           onPressed: () {
             HapticFeedback.lightImpact();
+            // 🔹 Navigate to the new Notifications Screen
+            Navigator.push(context, MaterialPageRoute(builder: (_) => const ParentNotificationsScreen()));
           },
         ),
         Container(
@@ -584,6 +615,159 @@ class _ParentDashboardState extends State<ParentDashboard>
           ),
         );
       }).toList(),
+    );
+  }
+
+  // 🔹 NEW FEATURE 1: Teacher Meeting Scheduler Card
+  Widget _buildTeacherMeetingCard(Map<String, dynamic> child) {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFFE8F5E9),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: primary.withOpacity(0.3), width: 1.5),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            Navigator.push(
+              context, 
+              MaterialPageRoute(
+                builder: (_) => TeacherMeetingScreen(childName: child['name'], childClass: child['class'])
+              )
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(color: primary, shape: BoxShape.circle, boxShadow: [BoxShadow(color: primary.withOpacity(0.4), blurRadius: 8, offset: const Offset(0, 4))]),
+                  child: const Icon(Icons.calendar_month_rounded, color: Colors.white, size: 24),
+                ),
+                const SizedBox(width: 16),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Schedule Teacher Meeting', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF1A1A2E))),
+                      SizedBox(height: 4),
+                      Text('Book a 1-on-1 session with the class teacher', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right_rounded, color: primary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // 🔹 NEW FEATURE 2: Parent Action Plan
+  Widget _buildParentActionPlan(Map<String, dynamic> child) {
+    bool isCritical = (child['attendance'] as int) <= 60;
+    
+    List<String> actions = isCritical 
+        ? ['Review missed physics notes with ${child['name'].split(" ").first}', 'Ensure child sleeps by 10 PM daily', 'Schedule a call with the class teacher']
+        : ['Acknowledge good performance in Science', 'Help prepare for upcoming math quiz', 'Limit screen time before bed'];
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 14, offset: const Offset(0, 5))],
+      ),
+      child: Column(
+        children: actions.map((action) => Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: Row(
+            children: [
+              const Icon(Icons.check_circle_outline_rounded, color: primary, size: 22),
+              const SizedBox(width: 12),
+              Expanded(child: Text(action, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Color(0xFF1A1A2E)))),
+            ],
+          ),
+        )).toList(),
+      ),
+    );
+  }
+
+  // 🔹 NEW FEATURE 3: Wellbeing & Stress Alert
+  Widget _buildWellbeingAlert(Map<String, dynamic> child) {
+    bool isCritical = (child['attendance'] as int) <= 60;
+    
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: isCritical ? [const Color(0xFFFFF0F0), const Color(0xFFFFE0E0)] : [const Color(0xFFF0F8FF), const Color(0xFFE0F0FF)]),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isCritical ? const Color(0xFFFC5C7D).withOpacity(0.3) : const Color(0xFF2575FC).withOpacity(0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(isCritical ? Icons.mood_bad_rounded : Icons.sentiment_satisfied_alt_rounded, 
+               color: isCritical ? const Color(0xFFFC5C7D) : const Color(0xFF2575FC), size: 28),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(isCritical ? 'High Stress Indicators Detected' : 'Positive Emotional State', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: isCritical ? const Color(0xFFFC5C7D) : const Color(0xFF2575FC))),
+                const SizedBox(height: 6),
+                Text(
+                  isCritical 
+                      ? 'EduAI noticed ${child['name'].split(" ").first} might be feeling overwhelmed due to missed classes. A gentle, supportive conversation is highly advised.'
+                      : '${child['name'].split(" ").first} shows healthy engagement and low stress levels this week. Keep up the positive reinforcement!',
+                  style: const TextStyle(fontSize: 13, color: Colors.black87, height: 1.4),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // 🔹 NEW FEATURE 4: Teacher Recommendation Card
+  Widget _buildTeacherRecommendation(Map<String, dynamic> child) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [BoxShadow(color: const Color(0xFFFF8008).withOpacity(0.1), blurRadius: 14, offset: const Offset(0, 5))],
+        border: Border.all(color: const Color(0xFFFF8008).withOpacity(0.3)),
+      ),
+      child: Row(
+        children: [
+          const CircleAvatar(
+            radius: 24,
+            backgroundColor: Color(0xFFFF8008),
+            child: Text('Mr. V', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Message from Mr. Verma (Class Teacher)', style: TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w600)),
+                const SizedBox(height: 4),
+                Text(
+                  '"I highly suggest enrolling ${child['name'].split(" ").first} in the weekend remedial session to cover up the missed topics."',
+                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E), fontStyle: FontStyle.italic),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 

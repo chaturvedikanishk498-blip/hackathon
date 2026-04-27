@@ -33,16 +33,16 @@ class _StudentDashboardState extends State<StudentDashboard>
   static const Color bgColor = Color(0xFFF5F3FF);
   static const Color cardBg = Colors.white;
 
-  // 🔹 Dynamic Student Data Map for Hackathon Demo
+  // 🔹 Dynamic Student Data Map
   final Map<String, Map<String, dynamic>> _studentDataMap = {
     'harsh@gmail.com': {
       'name': 'Harsh',
       'class': 'Class X - A',
-      'attendance': '91',
+      'attendance': '58', // Intentionally low
       'gpa': '8.4',
       'rank': '#5',
       'weak_subject': 'Chemistry',
-      'insight': 'Your recent assignments show consistent improvement in Physics. Consider revising the Atomic Structure chapter in Chemistry.',
+      'insight': 'Your recent assignments show consistent improvement in Physics. However, low attendance is an academic risk. Please attend upcoming classes regularly.',
     },
     'kanishk@gmail.com': {
       'name': 'Kanishk',
@@ -59,8 +59,8 @@ class _StudentDashboardState extends State<StudentDashboard>
       'attendance': '94',
       'gpa': '8.7',
       'rank': '#3',
-      'weak_subject': 'Chemistry',
-      'insight': 'Great job on Physics! 🚀 Your recent assignments show consistent improvement.',
+      'weak_subject': 'Physics',
+      'insight': 'Great job on Chemistry! 🚀 Your recent assignments show consistent improvement.',
     }
   };
 
@@ -126,14 +126,13 @@ class _StudentDashboardState extends State<StudentDashboard>
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildHomeDashboard(), // Tab 0: Home Page
-          _buildPlaceholderScreen("Courses Overview"), // Tab 1
-          const AssignmentsScreen(), // Tab 2: Reused Full Screen
-          const MarksScreen(), // Tab 3: Reused Full Screen
+          _buildHomeDashboard(),
+          _buildPlaceholderScreen("Courses Overview"),
+          const AssignmentsScreen(),
+          const MarksScreen(),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
-      
       floatingActionButton: _selectedIndex == 0 
           ? FloatingActionButton(
               onPressed: () {
@@ -150,6 +149,8 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   Widget _buildHomeDashboard() {
+    int attendanceVal = int.tryParse(_currentStudent['attendance'].toString()) ?? 100;
+    
     return CustomScrollView(
       slivers: [
         _buildSliverHeader(),
@@ -165,70 +166,59 @@ class _StudentDashboardState extends State<StudentDashboard>
                 }),
                 const SizedBox(height: 14),
                 _buildTodaySchedule(),
-                const SizedBox(height: 24),
                 
+                // 🔹 Low Attendance Alert Logic
+                if (attendanceVal < 75) ...[
+                  const SizedBox(height: 24),
+                  _buildAttendanceAlert(),
+                ],
+                
+                const SizedBox(height: 24),
                 _buildStatsRow(),
                 const SizedBox(height: 24),
-                
-                // --- 🔹 AI & PLANNING FEATURES ---
-                
                 _buildSectionTitle('AI Insights ✨'),
                 const SizedBox(height: 14),
                 _buildAIInsightsCard(),
                 const SizedBox(height: 24),
-
                 _buildSectionTitle('Smart Study Planner 📝'),
                 const SizedBox(height: 14),
                 _buildSmartStudyPlanner(),
                 const SizedBox(height: 24),
-
                 _buildSectionTitle('Focus Mode ⏱️'),
                 const SizedBox(height: 14),
                 const StudyTimerWidget(),
                 const SizedBox(height: 24),
-
-                // --- 🔹 ACADEMIC PROGRESS ---
-
                 _buildSectionTitle('Upcoming Exams ⏰'),
                 const SizedBox(height: 14),
                 _buildUpcomingExams(),
                 const SizedBox(height: 24),
-
                 _buildSectionTitle('Subject Progress 📊'),
                 const SizedBox(height: 14),
                 _buildSubjectProgress(),
                 const SizedBox(height: 24),
-
                 _buildSectionTitle('Weak Subject Detection 📉'),
                 const SizedBox(height: 14),
                 _buildWeakSubjectCard(),
                 const SizedBox(height: 24),
-
                 _buildSectionTitle('Current Goals 🎯'),
                 const SizedBox(height: 14),
                 _buildGoalTracker(),
                 const SizedBox(height: 24),
-
-                // --- 🔹 EXISTING SECTIONS (ENHANCED) ---
-                
                 _buildSectionHeader('Pending Assignments', onTapViewAll: () {
-                   Navigator.push(context, MaterialPageRoute(builder: (_) => const AssignmentsScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AssignmentsScreen()));
                 }),
                 const SizedBox(height: 14),
                 _buildAssignmentsList(),
                 const SizedBox(height: 24),
-                
                 _buildSectionHeader('Recent Grades', onTapViewAll: () {
-                   Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksScreen()));
                 }),
                 const SizedBox(height: 14),
                 _buildGradesList(),
                 const SizedBox(height: 24),
-
                 _buildSectionTitle('Smart Notifications 🔔'),
                 const SizedBox(height: 14),
                 _buildSmartNotifications(),
-                
                 const SizedBox(height: 100), 
               ],
             ),
@@ -249,12 +239,21 @@ class _StudentDashboardState extends State<StudentDashboard>
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-          onPressed: () {},
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            showModalBottomSheet(
+              context: context,
+              backgroundColor: Colors.transparent,
+              isScrollControlled: true,
+              builder: (_) => _buildNotificationSheet(),
+            );
+          },
         ),
         GestureDetector(
           onTap: () => Navigator.push(
             context,
-            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+            // 🔹 Passing dynamic student data to ProfileScreen
+            MaterialPageRoute(builder: (_) => ProfileScreen(studentData: _currentStudent)),
           ),
           child: Container(
             margin: const EdgeInsets.only(right: 16),
@@ -296,7 +295,6 @@ class _StudentDashboardState extends State<StudentDashboard>
                             children: [
                               const Icon(Icons.school, color: Colors.white, size: 14),
                               const SizedBox(width: 5),
-                              // 🔹 Dynamic Class
                               Text(_currentStudent['class'] as String, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
                             ],
                           ),
@@ -320,7 +318,6 @@ class _StudentDashboardState extends State<StudentDashboard>
                       ],
                     ),
                     const SizedBox(height: 8),
-                    // 🔹 Dynamic User Greeting
                     Text(
                       'Good Morning,\n${_currentStudent['name']}! 👋',
                       style: const TextStyle(
@@ -337,6 +334,158 @@ class _StudentDashboardState extends State<StudentDashboard>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  // 🔹 Custom Attendance Warning Alert Widget
+  Widget _buildAttendanceAlert() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFC5C7D).withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFFC5C7D).withOpacity(0.4), width: 1.5),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: const Color(0xFFFC5C7D),
+              shape: BoxShape.circle,
+              boxShadow: [BoxShadow(color: const Color(0xFFFC5C7D).withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))],
+            ),
+            child: const Icon(Icons.warning_rounded, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Action Required: Low Attendance',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFFFC5C7D)),
+                ),
+                SizedBox(height: 5),
+                Text(
+                  'Attendance Alert: Your attendance is critically low. Please attend upcoming classes regularly.',
+                  style: TextStyle(fontSize: 13, color: Color(0xFF1A1A2E), height: 1.3),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationSheet() {
+    final notifications = [
+      {
+        'title': 'Math Final Exam Tomorrow',
+        'subtitle': 'Prepare well – exam at 10:00 AM',
+        'color': const Color(0xFFFC5C7D),
+        'icon': Icons.priority_high_rounded,
+        'type': 'High',
+      },
+      {
+        'title': 'Chemistry Lab Report Missing',
+        'subtitle': 'Submit before 5:00 PM today',
+        'color': const Color(0xFFFF8008),
+        'icon': Icons.assignment_late_rounded,
+        'type': 'Medium',
+      },
+      {
+        'title': 'New Timetable Updated',
+        'subtitle': 'Check your updated schedule',
+        'color': const Color(0xFF667EEA),
+        'icon': Icons.calendar_today_rounded,
+        'type': 'Info',
+      },
+    ];
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: Colors.black12,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          ),
+          const Text(
+            'Notifications 🔔',
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E)),
+          ),
+          const SizedBox(height: 16),
+          ...notifications.map((n) {
+            final color = n['color'] as Color;
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.06),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: color.withOpacity(0.25), width: 1.2),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(9),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(n['icon'] as IconData, color: color, size: 20),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: color.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            n['type'] as String,
+                            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          n['title'] as String,
+                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E)),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          n['subtitle'] as String,
+                          style: const TextStyle(fontSize: 12, color: Colors.black45),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
       ),
     );
   }
@@ -363,7 +512,7 @@ class _StudentDashboardState extends State<StudentDashboard>
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _schedule.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (_, i) {
           final p = _schedule[i];
           final start = p['startTime'] as TimeOfDay;
@@ -410,7 +559,6 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   Widget _buildStatsRow() {
-    // 🔹 Dynamic Stats Injection
     final stats = [
       {'label': 'Attendance', 'value': '${_currentStudent['attendance']}%', 'icon': Icons.check_circle_outline, 'color': const Color(0xFF11998E), 'route': const AttendanceScreen()},
       {'label': 'GPA', 'value': '${_currentStudent['gpa']}', 'icon': Icons.stars_rounded, 'color': const Color(0xFFFC5C7D), 'route': const MarksScreen()},
@@ -533,7 +681,7 @@ class _StudentDashboardState extends State<StudentDashboard>
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: exams.length,
-        separatorBuilder: (_, _) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (_, i) {
           final e = exams[i];
           final color = e['color'] as Color;
@@ -644,9 +792,8 @@ class _StudentDashboardState extends State<StudentDashboard>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Great job this week! 🚀', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF1A1A2E))),
+                const Text('EduAI Performance Insight', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF1A1A2E))),
                 const SizedBox(height: 6),
-                // 🔹 Dynamic Insight
                 Text(_currentStudent['insight'] as String, style: const TextStyle(fontSize: 13, color: Colors.black54, height: 1.4)),
               ],
             ),
@@ -678,7 +825,6 @@ class _StudentDashboardState extends State<StudentDashboard>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // 🔹 Dynamic Weak Subject
                   Text('Focus Required: ${_currentStudent['weak_subject']}', style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF1A1A2E))),
                   const SizedBox(height: 4),
                   const Text('EduAI recommends revising daily for 20 mins to improve your score.', style: TextStyle(fontSize: 13, color: Colors.black54, height: 1.3)),
@@ -745,7 +891,7 @@ class _StudentDashboardState extends State<StudentDashboard>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                   Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)), child: Text(a['priority'] as String, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700))),
+                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)), child: Text(a['priority'] as String, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700))),
                   const SizedBox(height: 5),
                   Text(a['due'] as String, style: const TextStyle(fontSize: 12, color: Colors.black45)),
                 ],
@@ -772,9 +918,9 @@ class _StudentDashboardState extends State<StudentDashboard>
           decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 3))]),
           child: Row(
             children: [
-               Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)), child: Center(child: Text(g['grade'] as String, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w800)))),
+              Container(width: 44, height: 44, decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(14)), child: Center(child: Text(g['grade'] as String, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w800)))),
               const SizedBox(width: 14),
-               Expanded(child: Text(g['subject'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF1A1A2E)))),
+              Expanded(child: Text(g['subject'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF1A1A2E)))),
               Text(g['marks'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black45)),
             ],
           ),
@@ -796,30 +942,30 @@ class _StudentDashboardState extends State<StudentDashboard>
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.3), width: 1.5), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 3))]),
           child: Material(
-             color: Colors.transparent,
-             child: InkWell(
-               borderRadius: BorderRadius.circular(16),
-               onTap: () => HapticFeedback.selectionClick(),
-               child: Padding(
-                 padding: const EdgeInsets.all(16),
-                 child: Row(
-                   children: [
-                     Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(m['icon'] as IconData, color: color, size: 20)),
-                     const SizedBox(width: 14),
-                     Expanded(
-                       child: Column(
-                         crossAxisAlignment: CrossAxisAlignment.start,
-                         children: [
-                           Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(m['type'] as String, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold))),
-                           const SizedBox(height: 6),
-                           Text(m['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E))),
-                         ],
-                       ),
-                     ),
-                   ],
-                 ),
-               ),
-             ),
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => HapticFeedback.selectionClick(),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
+                  children: [
+                    Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(m['icon'] as IconData, color: color, size: 20)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(m['type'] as String, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold))),
+                          const SizedBox(height: 6),
+                          Text(m['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E))),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         );
       }).toList(),

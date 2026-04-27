@@ -1,82 +1,134 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+// Adjust import path to login.dart as needed depending on your project structure
+import '../login.dart'; 
 
 class ProfileScreen extends StatelessWidget {
-  const ProfileScreen({super.key});
+  final Map<String, dynamic> studentData;
+
+  const ProfileScreen({super.key, required this.studentData});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F3FF),
       appBar: AppBar(
-        title: const Text("Student Profile", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text('My Profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF667EEA),
+        iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(colors: [Color(0xFF667EEA), Color(0xFF764BA2)]),
-              ),
-              child: const CircleAvatar(
-                radius: 50,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.person, size: 50, color: Color(0xFF667EEA)),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text("Rahul Sharma", style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
-            const Text("Class X - A | Roll No: 24", style: TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 30),
-            _buildProfileItem(Icons.email, "Email", "rahul.sharma@school.edu"),
-            _buildProfileItem(Icons.phone, "Phone", "+91 9876543210"),
-            _buildProfileItem(Icons.location_on, "Address", "123, Green Park, New Delhi"),
-            _buildProfileItem(Icons.bloodtype, "Blood Group", "O+"),
-            const SizedBox(height: 40),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Adjust route to point to your login screen
-                  Navigator.of(context).pushReplacementNamed('/login'); 
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text("Logout Securely", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFC5C7D),
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 4,
+      body: Container(
+        color: const Color(0xFFF5F3FF),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 30.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Avatar
+              Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0xFF667EEA), width: 2),
+                ),
+                child: CircleAvatar(
+                  radius: 50,
+                  backgroundColor: const Color(0xFF667EEA).withOpacity(0.15),
+                  child: const Icon(Icons.person, size: 55, color: Color(0xFF667EEA)),
                 ),
               ),
-            )
-          ],
-        ),
-      ),
-    );
-  }
+              const SizedBox(height: 20),
+              
+              // Dynamic Identity
+              Text(
+                studentData['name'] ?? 'Student',
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E)),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                studentData['class'] ?? 'Class X',
+                style: const TextStyle(fontSize: 16, color: Colors.black54, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 30),
 
-  Widget _buildProfileItem(IconData icon, String title, String value) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(color: const Color(0xFF667EEA).withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
-          child: Icon(icon, color: const Color(0xFF667EEA)),
+              // Info Cards
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 15, offset: const Offset(0, 5))
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: const Color(0xFF667EEA).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.email_outlined, color: Color(0xFF667EEA)),
+                      ),
+                      title: const Text('Email Address', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                      subtitle: Text(
+                        FirebaseAuth.instance.currentUser?.email ?? 'Not Logged In',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                    ),
+                    const Divider(height: 1, indent: 65, endIndent: 20),
+                    ListTile(
+                      leading: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(color: const Color(0xFFFC5C7D).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                        child: const Icon(Icons.analytics_outlined, color: Color(0xFFFC5C7D)),
+                      ),
+                      title: const Text('Academic GPA', style: TextStyle(fontSize: 13, color: Colors.black54)),
+                      subtitle: Text(
+                        studentData['gpa'] ?? 'N/A',
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.black87),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              
+              const Spacer(),
+
+              // Logout Button
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    elevation: 4,
+                    shadowColor: Colors.redAccent.withOpacity(0.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  icon: const Icon(Icons.logout_rounded, color: Colors.white),
+                  label: const Text(
+                    'Logout Securely',
+                    style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                  ),
+                  onPressed: () async {
+                    // Sign out of Firebase securely
+                    await FirebaseAuth.instance.signOut();
+                    
+                    if (context.mounted) {
+                      // Remove all current routes and send user straight to login
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const LogInScreen()),
+                        (route) => false,
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
-        title: Text(title, style: const TextStyle(fontSize: 12, color: Colors.black54, fontWeight: FontWeight.w600)),
-        subtitle: Text(value, style: const TextStyle(fontSize: 15, color: Color(0xFF1A1A2E), fontWeight: FontWeight.w700)),
       ),
     );
   }
