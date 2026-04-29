@@ -15,7 +15,6 @@ class BusTrackingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🎨 Theme Colors matching the Parent Dashboard
     return Scaffold(
       backgroundColor: bgColor,
       appBar: AppBar(
@@ -27,7 +26,6 @@ class BusTrackingScreen extends StatelessWidget {
             icon: const Icon(Icons.sos_rounded, color: Colors.redAccent, size: 30),
             onPressed: () {
               HapticFeedback.heavyImpact();
-              // Mock SOS action
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('Emergency Alert Sent to School Admin!'), backgroundColor: Colors.red),
               );
@@ -38,15 +36,14 @@ class BusTrackingScreen extends StatelessWidget {
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // 🔹 Mock Live Location Map Area
             Container(
               height: 250,
               width: double.infinity,
-              color: const Color(0xFFBFE6E0), // Soft map-like placeholder background
+              color: const Color(0xFFBFE6E0), 
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                  const Icon(Icons.map_outlined, size: 100, color: Colors.white54), // Background map icon
+                  const Icon(Icons.map_outlined, size: 100, color: Colors.white54), 
                   Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -75,7 +72,7 @@ class BusTrackingScreen extends StatelessWidget {
               ),
             ),
             
-            // 🔹 Bottom Detail Sheet
+            
             Transform.translate(
               offset: const Offset(0, -20),
               child: Container(
@@ -88,21 +85,21 @@ class BusTrackingScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Trip Info Card
+                      
                       _buildTripInfoCard(cardBg, primary),
                       const SizedBox(height: 20),
 
-                      // Driver Info
+                      
                       _buildDriverInfo(cardBg, primary),
                       const SizedBox(height: 24),
 
-                      // Timeline / Route Progress
+                      
                       const Text("Route Progress", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
                       const SizedBox(height: 16),
                       _buildRouteTimeline(primary),
                       const SizedBox(height: 24),
 
-                      // Child Status Alerts
+                     
                       const Text("Recent Alerts", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
                       const SizedBox(height: 14),
                       _buildAlert(Icons.check_circle_rounded, "$childName safely boarded the bus.", Colors.green, "07:30 AM"),
@@ -196,7 +193,7 @@ class BusTrackingScreen extends StatelessWidget {
             child: const CircleAvatar(
               radius: 24,
               backgroundColor: Color(0xFFE0E0E0),
-              child: Icon(Icons.person, color: Colors.grey, size: 30), // Placeholder avatar
+              child: Icon(Icons.person, color: Colors.grey, size: 30), 
             ),
           ),
           const SizedBox(width: 14),

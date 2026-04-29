@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// Adjust import path to login.dart as needed depending on your project structure
 import '../login.dart'; 
 
 class ProfileScreen extends StatelessWidget {
@@ -24,7 +23,6 @@ class ProfileScreen extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Avatar
               Container(
                 padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
@@ -39,7 +37,6 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               
-              // Dynamic Identity
               Text(
                 studentData['name'] ?? 'Student',
                 style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Color(0xFF1A1A2E)),
@@ -51,7 +48,6 @@ class ProfileScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // Info Cards
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -93,7 +89,7 @@ class ProfileScreen extends StatelessWidget {
               
               const Spacer(),
 
-              // Logout Button
+           
               SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
@@ -112,11 +108,11 @@ class ProfileScreen extends StatelessWidget {
                     style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 0.5),
                   ),
                   onPressed: () async {
-                    // Sign out of Firebase securely
+                   
                     await FirebaseAuth.instance.signOut();
                     
                     if (context.mounted) {
-                      // Remove all current routes and send user straight to login
+                      
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (context) => const LogInScreen()),

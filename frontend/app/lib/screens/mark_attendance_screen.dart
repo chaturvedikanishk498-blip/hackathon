@@ -11,7 +11,6 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   String selectedClass = 'X - A';
   final List<String> classes = ['X - A', 'IX - B', 'XI - A'];
 
-  // 🔹 Top 5 Mock Students
   final List<Map<String, dynamic>> students = [
     {'name': 'Ananya Gupta', 'roll': '101', 'isPresent': true},
     {'name': 'Harsh Sharma', 'roll': '102', 'isPresent': true},
@@ -28,8 +27,7 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
         behavior: SnackBarBehavior.floating,
       ),
     );
-    Navigator.pop(context); // Go back to dashboard on submit
-  }
+    Navigator.pop(context); 
 
   @override
   Widget build(BuildContext context) {

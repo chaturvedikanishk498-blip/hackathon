@@ -5,7 +5,6 @@ class TeacherNotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 🔹 Mock Data Covering Multiple Teacher Scenarios
     final notifications = [
       {'title': 'Parent Meeting Request', 'desc': 'Amit Verma requested a meeting regarding Rohan\'s performance.', 'type': 'Action Needed', 'time': '10 mins ago', 'color': const Color(0xFF11998E), 'icon': Icons.handshake_rounded},
       {'title': 'Attendance Pending', 'desc': 'You have not marked attendance for Class IX-B yet.', 'type': 'Reminder', 'time': '1h ago', 'color': const Color(0xFFFF8008), 'icon': Icons.access_time_rounded},

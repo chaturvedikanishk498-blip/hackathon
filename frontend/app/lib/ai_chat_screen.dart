@@ -32,7 +32,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
       _messages.add({'text': _msgController.text, 'isBot': false});
       _msgController.clear();
     });
-    // Dummy Bot Reply Delay
     Future.delayed(const Duration(milliseconds: 1200), () {
       if (mounted) {
         setState(() {
@@ -115,7 +114,6 @@ class _AIChatScreenState extends State<AIChatScreen> {
             ),
           ),
           
-          // Chat Input Field
           Container(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             decoration: const BoxDecoration(

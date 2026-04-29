@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // Added for Haptic Feedback
+import 'package:flutter/services.dart'; 
 import 'login.dart';
 
 class AdminDashboard extends StatefulWidget {
@@ -15,7 +15,6 @@ class _AdminDashboardState extends State<AdminDashboard>
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
 
-  // 🎨 Admin Theme: Dark Navy + Amber/Orange
   static const Color primary = Color(0xFFFF8008);
   static const Color secondary = Color(0xFFFFC837);
   static const Color darkBg = Color(0xFF1A1A2E);
@@ -46,21 +45,19 @@ class _AdminDashboardState extends State<AdminDashboard>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: bgColor,
-      // 💡 IndexedStack keeps the state of all tabs alive without re-rendering them
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildDashboardContent(), // Tab 0: Home/Dashboard
-          _buildPlaceholderScreen('Students Management'), // Tab 1
-          _buildPlaceholderScreen('Analytics Center'), // Tab 2
-          _buildPlaceholderScreen('System Settings'), // Tab 3
+          _buildDashboardContent(), 
+          _buildPlaceholderScreen('Students Management'), 
+          _buildPlaceholderScreen('Analytics Center'), 
+          _buildPlaceholderScreen('System Settings'), 
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // Extracted the main scrolling dashboard into its own widget function
   Widget _buildDashboardContent() {
     return CustomScrollView(
       slivers: [
@@ -111,7 +108,6 @@ class _AdminDashboardState extends State<AdminDashboard>
       elevation: 0,
       leading: const SizedBox(),
       actions: [
-        // Live Indicator
         Container(
           margin: const EdgeInsets.symmetric(vertical: 8),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -128,17 +124,14 @@ class _AdminDashboardState extends State<AdminDashboard>
           ),
         ),
         
-        // Notifications Button
         IconButton(
           icon: const Icon(Icons.notifications_outlined, color: Colors.white),
           tooltip: 'Notifications',
           onPressed: () {
             HapticFeedback.lightImpact();
-            // TODO: Route to Notifications screen here
           },
         ),
 
-        // Accessible Profile/Logout Avatar
         Container(
           margin: const EdgeInsets.only(right: 16),
           child: Material(
@@ -223,12 +216,10 @@ class _AdminDashboardState extends State<AdminDashboard>
       physics: const NeverScrollableScrollPhysics(),
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      // 💡 Crucial FIX: Changed this from 1.6 to 1.85 to make the boxes much shorter
       childAspectRatio: 1.85, 
       children: stats.map((s) {
         final color = s['color'] as Color;
         return Container(
-          // 💡 Tighter padding internally to fit the new shorter height flawlessly
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           decoration: BoxDecoration(
             color: cardBg,
@@ -242,15 +233,14 @@ class _AdminDashboardState extends State<AdminDashboard>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6), // Shrink icon padding
+                    padding: const EdgeInsets.all(6), 
                     decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
-                    child: Icon(s['icon'] as IconData, color: color, size: 16), // Adjusted icon scale
+                    child: Icon(s['icon'] as IconData, color: color, size: 16), 
                   ),
                   Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
                 ],
               ),
               const Spacer(),
-              // Adjusted fonts scaled down to match the squished block heights safely
               Text(s['value'] as String, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E), height: 1.1)),
               const SizedBox(height: 2),
               Text(s['label'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: Color(0xFF1A1A2E), height: 1.1)),
@@ -264,7 +254,6 @@ class _AdminDashboardState extends State<AdminDashboard>
 
 
 
-  // 💡 UPGRADED: Quick Actions are now fully interactive with Ripple Highlights
   Widget _buildQuickActions() {
     final actions = [
       {'label': 'Announcements', 'icon': Icons.campaign_rounded, 'color': primary},
@@ -298,7 +287,6 @@ class _AdminDashboardState extends State<AdminDashboard>
                       highlightColor: color.withOpacity(0.05),
                       onTap: () {
                         HapticFeedback.lightImpact();
-                        // Navigation Example:
                         Navigator.push(context, MaterialPageRoute(builder: (_) => Scaffold(appBar: AppBar(title: Text(a['label'] as String)))));
                       },
                       child: Padding(
@@ -408,7 +396,6 @@ class _AdminDashboardState extends State<AdminDashboard>
     );
   }
 
-  // 💡 UPGRADED: Alerts are now tap-able list tiles! 
   Widget _buildAlerts() {
     final alerts = [
       {'msg': '3 students absent for 5+ days', 'type': 'warning', 'time': '10 min ago'},
@@ -520,7 +507,6 @@ class _AdminDashboardState extends State<AdminDashboard>
     return Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E), letterSpacing: -0.3));
   }
 
-  // 💡 UPGRADED: Proper interactive state setup for Bottom Navigation Tabs
   Widget _buildBottomNav() {
     final items = [
       {'icon': Icons.dashboard_rounded, 'label': 'Dashboard'},
@@ -572,7 +558,6 @@ class _AdminDashboardState extends State<AdminDashboard>
     );
   }
 
-  // Helpful component for testing the Bottom Navbar routes
   Widget _buildPlaceholderScreen(String title) {
     return Scaffold(
       backgroundColor: bgColor,

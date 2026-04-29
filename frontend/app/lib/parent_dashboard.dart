@@ -3,13 +3,10 @@ import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart'; 
 import 'login.dart';
 
-// 🔹 Import the AI Chat Screen
 import 'ai_chat_screen.dart';
 
-// 🔹 Import the Bus Tracking Screen
 import 'screens/bus_tracking_screen.dart';
 
-// 🔹 Import New Screens
 import 'screens/parent_notification_screen.dart';
 import 'screens/teacher_meeting_screen.dart';
 
@@ -26,13 +23,11 @@ class _ParentDashboardState extends State<ParentDashboard>
   int _selectedChild = 0;
   late AnimationController _animController;
 
-  // 🎨 Parent Theme: Emerald Green + Teal
   static const Color primary = Color(0xFF11998E);
   static const Color secondary = Color(0xFF38EF7D);
   static const Color bgColor = Color(0xFFECFDF5);
   static const Color cardBg = Colors.white;
 
-  // 🔹 Parent Profiles Mock Data
   final Map<String, Map<String, dynamic>> _parentProfiles = {
     'parent1@gmail.com': {
       'parentName': 'Amit Verma',
@@ -58,7 +53,6 @@ class _ParentDashboardState extends State<ParentDashboard>
     }
   };
 
-  // 🔹 Dynamic Getters based on FirebaseAuth
   String get _currentUserEmail => FirebaseAuth.instance.currentUser?.email ?? '';
   Map<String, dynamic> get _currentProfile => _parentProfiles[_currentUserEmail] ?? _parentProfiles['default']!;
   
@@ -138,7 +132,6 @@ class _ParentDashboardState extends State<ParentDashboard>
                 _buildQuickStats(child),
                 const SizedBox(height: 22),
                 
-                // 🔹 Safe Route Bus Tracking
                 _buildSectionTitle("Safe Route Tracker 🚌"),
                 const SizedBox(height: 14),
                 _buildBusTrackingCard(child),
@@ -154,25 +147,21 @@ class _ParentDashboardState extends State<ParentDashboard>
                 _buildStudySuggestionsCard(child),
                 const SizedBox(height: 22),
 
-                // 🔹 NEW: Connect with School (Meeting Scheduler)
                 _buildSectionTitle("Connect with School 🏫"),
                 const SizedBox(height: 14),
                 _buildTeacherMeetingCard(child),
                 const SizedBox(height: 22),
 
-                // 🔹 NEW: Hackathon Feature - Parent Action Plan
                 _buildSectionTitle("Parent Action Plan 🎯"),
                 const SizedBox(height: 14),
                 _buildParentActionPlan(child),
                 const SizedBox(height: 22),
 
-                // 🔹 NEW: Hackathon Feature - Wellbeing & Stress Alert
                 _buildSectionTitle("Wellbeing & Stress Alert 💚"),
                 const SizedBox(height: 14),
                 _buildWellbeingAlert(child),
                 const SizedBox(height: 22),
 
-                // 🔹 NEW: Hackathon Feature - Teacher Recommendation
                 _buildSectionTitle("Teacher Recommendation 💡"),
                 const SizedBox(height: 14),
                 _buildTeacherRecommendation(child),
@@ -217,7 +206,6 @@ class _ParentDashboardState extends State<ParentDashboard>
           tooltip: 'Notifications',
           onPressed: () {
             HapticFeedback.lightImpact();
-            // 🔹 Navigate to the new Notifications Screen
             Navigator.push(context, MaterialPageRoute(builder: (_) => const ParentNotificationsScreen()));
           },
         ),
@@ -618,7 +606,6 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 NEW FEATURE 1: Teacher Meeting Scheduler Card
   Widget _buildTeacherMeetingCard(Map<String, dynamic> child) {
     return Container(
       decoration: BoxDecoration(
@@ -668,7 +655,6 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 NEW FEATURE 2: Parent Action Plan
   Widget _buildParentActionPlan(Map<String, dynamic> child) {
     bool isCritical = (child['attendance'] as int) <= 60;
     
@@ -698,7 +684,6 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 NEW FEATURE 3: Wellbeing & Stress Alert
   Widget _buildWellbeingAlert(Map<String, dynamic> child) {
     bool isCritical = (child['attendance'] as int) <= 60;
     
@@ -735,7 +720,6 @@ class _ParentDashboardState extends State<ParentDashboard>
     );
   }
 
-  // 🔹 NEW FEATURE 4: Teacher Recommendation Card
   Widget _buildTeacherRecommendation(Map<String, dynamic> child) {
     return Container(
       padding: const EdgeInsets.all(16),

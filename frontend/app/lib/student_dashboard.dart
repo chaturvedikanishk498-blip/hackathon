@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// 🔹 Import Firebase Auth for user detection
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
-// 🔹 Import New AI and Feature Files
 import 'student_ai_chat.dart';
 import 'study_timer_widget.dart';
 
-// 🔹 Import New Screens
 import 'screens/attendance_screen.dart';
 import 'screens/marks_screen.dart';
 import 'screens/assignments_screen.dart';
@@ -27,18 +25,16 @@ class _StudentDashboardState extends State<StudentDashboard>
   late AnimationController _headerAnim;
   late Animation<double> _headerFade;
 
-  // 🎨 Student Theme: Deep Purple + Indigo
   static const Color primary = Color(0xFF667EEA);
   static const Color secondary = Color(0xFF764BA2);
   static const Color bgColor = Color(0xFFF5F3FF);
   static const Color cardBg = Colors.white;
 
-  // 🔹 Dynamic Student Data Map
   final Map<String, Map<String, dynamic>> _studentDataMap = {
     'harsh@gmail.com': {
       'name': 'Harsh',
       'class': 'Class X - A',
-      'attendance': '58', // Intentionally low
+      'attendance': '58', 
       'gpa': '8.4',
       'rank': '#5',
       'weak_subject': 'Chemistry',
@@ -65,7 +61,7 @@ class _StudentDashboardState extends State<StudentDashboard>
   };
 
   late Map<String, dynamic> _currentStudent;
-
+  Stream<DocumentSnapshot<Map<String,dynamic>>>? _studentStream;
   final List<Map<String, dynamic>> _studyTasks = [
     {'task': 'Revise Chemistry Ch 3', 'due': 'Today, 5:00 PM', 'priority': 'High', 'done': false, 'color': const Color(0xFFFC5C7D)},
     {'task': 'Complete History essay', 'due': 'Tomorrow, 10:00 AM', 'priority': 'Med', 'done': true, 'color': const Color(0xFFFF8008)},
@@ -96,22 +92,40 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   @override
-  void initState() {
-    super.initState();
-    
-    // 🔹 Dynamically Detect Logged-In User Profile
-    final email = FirebaseAuth.instance.currentUser?.email?.toLowerCase() ?? '';
-    _currentStudent = _studentDataMap[email] ?? _studentDataMap['default']!;
+void initState() {
+  super.initState();
 
-    _headerAnim = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    _headerFade = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _headerAnim, curve: Curves.easeOut),
-    );
-    _headerAnim.forward();
+  final user = FirebaseAuth.instance.currentUser;
+  final email = user?.email?.toLowerCase() ?? '';
+  final uid = user?.uid;
+
+  _currentStudent =
+      _studentDataMap[email] ?? _studentDataMap['default']!;
+
+  if(uid!=null){
+    _studentStream = FirebaseFirestore.instance
+      .collection('students')
+      .doc(uid)
+      .snapshots();
   }
+
+  _headerAnim = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 800),
+  );
+
+  _headerFade = Tween<double>(
+    begin:0,
+    end:1
+  ).animate(
+      CurvedAnimation(
+      parent:_headerAnim,
+      curve: Curves.easeOut
+      )
+  );
+
+  _headerAnim.forward();
+}
 
   @override
   void dispose() {
@@ -149,84 +163,33 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   Widget _buildHomeDashboard() {
-    int attendanceVal = int.tryParse(_currentStudent['attendance'].toString()) ?? 100;
-    
-    return CustomScrollView(
-      slivers: [
-        _buildSliverHeader(),
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 24),
-                _buildSectionHeader("Today's Schedule", onTapViewAll: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const TimetableScreen()));
-                }),
-                const SizedBox(height: 14),
-                _buildTodaySchedule(),
-                
-                // 🔹 Low Attendance Alert Logic
-                if (attendanceVal < 75) ...[
-                  const SizedBox(height: 24),
-                  _buildAttendanceAlert(),
-                ],
-                
-                const SizedBox(height: 24),
-                _buildStatsRow(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('AI Insights ✨'),
-                const SizedBox(height: 14),
-                _buildAIInsightsCard(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Smart Study Planner 📝'),
-                const SizedBox(height: 14),
-                _buildSmartStudyPlanner(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Focus Mode ⏱️'),
-                const SizedBox(height: 14),
-                const StudyTimerWidget(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Upcoming Exams ⏰'),
-                const SizedBox(height: 14),
-                _buildUpcomingExams(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Subject Progress 📊'),
-                const SizedBox(height: 14),
-                _buildSubjectProgress(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Weak Subject Detection 📉'),
-                const SizedBox(height: 14),
-                _buildWeakSubjectCard(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Current Goals 🎯'),
-                const SizedBox(height: 14),
-                _buildGoalTracker(),
-                const SizedBox(height: 24),
-                _buildSectionHeader('Pending Assignments', onTapViewAll: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AssignmentsScreen()));
-                }),
-                const SizedBox(height: 14),
-                _buildAssignmentsList(),
-                const SizedBox(height: 24),
-                _buildSectionHeader('Recent Grades', onTapViewAll: () {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const MarksScreen()));
-                }),
-                const SizedBox(height: 14),
-                _buildGradesList(),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Smart Notifications 🔔'),
-                const SizedBox(height: 14),
-                _buildSmartNotifications(),
-                const SizedBox(height: 100), 
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+
+if(_studentStream==null){
+ return _dashboardContent();
+}
+
+return StreamBuilder<
+DocumentSnapshot<Map<String,dynamic>>>(
+stream:_studentStream,
+builder:(context,snapshot){
+
+if(snapshot.hasData &&
+snapshot.data!.exists){
+
+final db=snapshot.data!.data()!;
+
+_currentStudent={
+..._currentStudent,
+...db
+};
+}
+
+return _dashboardContent();
+
+},
+);
+
+}
 
   Widget _buildSliverHeader() {
     return SliverAppBar(
@@ -252,7 +215,6 @@ class _StudentDashboardState extends State<StudentDashboard>
         GestureDetector(
           onTap: () => Navigator.push(
             context,
-            // 🔹 Passing dynamic student data to ProfileScreen
             MaterialPageRoute(builder: (_) => ProfileScreen(studentData: _currentStudent)),
           ),
           child: Container(
@@ -338,7 +300,137 @@ class _StudentDashboardState extends State<StudentDashboard>
     );
   }
 
-  // 🔹 Custom Attendance Warning Alert Widget
+  Widget _dashboardContent() {
+
+int attendanceVal=
+int.tryParse(
+_currentStudent['attendance'].toString()
+)??100;
+
+return CustomScrollView(
+slivers:[
+_buildSliverHeader(),
+
+SliverToBoxAdapter(
+child: Padding(
+padding: const EdgeInsets.symmetric(horizontal:20),
+
+child: Column(
+crossAxisAlignment:
+CrossAxisAlignment.start,
+
+children:[
+
+const SizedBox(height:24),
+
+_buildSectionHeader(
+"Today's Schedule",
+onTapViewAll: (){
+Navigator.push(
+context,
+MaterialPageRoute(
+builder:(_)=>const TimetableScreen()
+)
+);
+}
+),
+
+const SizedBox(height:14),
+
+_buildTodaySchedule(),
+
+if(attendanceVal<75)...[
+const SizedBox(height:24),
+_buildAttendanceAlert(),
+],
+
+const SizedBox(height:24),
+_buildStatsRow(),
+
+const SizedBox(height:24),
+_buildSectionTitle('AI Insights ✨'),
+const SizedBox(height:14),
+_buildAIInsightsCard(),
+
+const SizedBox(height:24),
+_buildSectionTitle('Smart Study Planner 📝'),
+const SizedBox(height:14),
+_buildSmartStudyPlanner(),
+
+const SizedBox(height:24),
+_buildSectionTitle('Focus Mode ⏱️'),
+const SizedBox(height:14),
+const StudyTimerWidget(),
+
+const SizedBox(height:24),
+_buildSectionTitle('Upcoming Exams ⏰'),
+const SizedBox(height:14),
+_buildUpcomingExams(),
+
+const SizedBox(height:24),
+_buildSectionTitle('Subject Progress 📊'),
+const SizedBox(height:14),
+_buildSubjectProgress(),
+
+const SizedBox(height:24),
+_buildSectionTitle(
+'Weak Subject Detection 📉'
+),
+const SizedBox(height:14),
+_buildWeakSubjectCard(),
+
+const SizedBox(height:24),
+_buildSectionTitle('Current Goals 🎯'),
+const SizedBox(height:14),
+_buildGoalTracker(),
+
+const SizedBox(height:24),
+
+_buildSectionHeader(
+'Pending Assignments',
+onTapViewAll: (){
+Navigator.push(
+context,
+MaterialPageRoute(
+builder:(_)=>
+const AssignmentsScreen()
+)
+);
+}
+),
+
+const SizedBox(height:14),
+
+_buildAssignmentsList(),
+
+const SizedBox(height:24),
+
+_buildSectionHeader(
+'Recent Grades',
+onTapViewAll: (){
+Navigator.push(
+context,
+MaterialPageRoute(
+builder:(_)=>const MarksScreen()
+)
+);
+}
+),
+
+const SizedBox(height:14),
+
+_buildGradesList(),
+
+const SizedBox(height:100),
+
+],
+),
+),
+),
+],
+);
+
+}
   Widget _buildAttendanceAlert() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -861,48 +953,82 @@ class _StudentDashboardState extends State<StudentDashboard>
     );
   }
 
-  Widget _buildAssignmentsList() {
-    final assignments = [
-      {'subject': 'Mathematics', 'task': 'Chapter 7 - Exercises', 'due': 'Tomorrow', 'priority': 'High', 'color': const Color(0xFFFC5C7D)},
-      {'subject': 'Physics', 'task': 'Lab Report Submission', 'due': 'In 3 days', 'priority': 'Medium', 'color': const Color(0xFFFF8008)},
-    ];
+  Widget _buildAssignmentsList(){
 
-    return Column(
-      children: assignments.map((a) {
-        final color = a['color'] as Color;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(18), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 14, offset: const Offset(0, 4))]),
-          child: Row(
-            children: [
-              Container(width: 4, height: 50, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4))),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(a['subject'] as String, style: const TextStyle(fontSize: 13, color: Colors.black54, fontWeight: FontWeight.w600)),
-                    const SizedBox(height: 3),
-                    Text(a['task'] as String, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF1A1A2E))),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)), child: Text(a['priority'] as String, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w700))),
-                  const SizedBox(height: 5),
-                  Text(a['due'] as String, style: const TextStyle(fontSize: 12, color: Colors.black45)),
-                ],
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
+String studentClass=
+_currentStudent['class'];
 
+return StreamBuilder<QuerySnapshot>(
+stream: FirebaseFirestore.instance
+.collection('assignments')
+.where(
+'class',
+isEqualTo:studentClass
+)
+.snapshots(),
+
+builder:(context,snapshot){
+
+if(!snapshot.hasData){
+return const Center(
+child:CircularProgressIndicator()
+);
+}
+
+final docs=snapshot.data!.docs;
+
+if(docs.isEmpty){
+return const Text(
+"No assignments"
+);
+}
+
+return Column(
+children: docs.map((doc){
+
+final a=
+doc.data()
+as Map<String,dynamic>;
+
+return Container(
+margin:
+const EdgeInsets.only(bottom:12),
+
+padding:
+const EdgeInsets.all(16),
+
+decoration: BoxDecoration(
+color:cardBg,
+borderRadius:
+BorderRadius.circular(18),
+),
+
+child: Row(
+children:[
+
+Expanded(
+child: Column(
+crossAxisAlignment:
+CrossAxisAlignment.start,
+children:[
+Text(a['subject']),
+Text(a['title']),
+],
+),
+),
+
+Text(a['due']),
+],
+),
+);
+
+}).toList(),
+);
+
+},
+);
+
+}
   Widget _buildGradesList() {
     final grades = [
       {'subject': 'Mathematics', 'grade': 'A+', 'marks': '95/100', 'color': const Color(0xFF667EEA)},

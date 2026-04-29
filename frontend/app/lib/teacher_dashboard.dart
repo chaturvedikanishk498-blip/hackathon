@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
 
-// 🔹 Import New Screens
 import 'screens/teacher_notification_screen.dart';
 import 'screens/mark_attendance_screen.dart';
 import 'screens/meeting_requests_screen.dart';
@@ -18,7 +17,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   int _selectedIndex = 0;
   late AnimationController _animController;
 
-  // 🎨 Teacher Theme: Rose + Indigo
   static const Color primary = Color(0xFFFC5C7D);
   static const Color secondary = Color(0xFF6A82FB);
   static const Color bgColor = Color(0xFFFFF5F7);
@@ -58,7 +56,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   _buildStatsRow(),
                   const SizedBox(height: 22),
 
-                  // 🔹 NEW FEATURE: Parent Meeting Action Center
                   _buildSectionTitle('Teacher Action Center'),
                   const SizedBox(height: 14),
                   _buildActionCenter(),
@@ -69,13 +66,11 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   _buildClassesList(),
                   const SizedBox(height: 22),
 
-                  // 🔹 NEW FEATURE: AI Class Performance Insight
                   _buildSectionTitle('AI Class Performance Insight ✨'),
                   const SizedBox(height: 14),
                   _buildAIInsightsCard(),
                   const SizedBox(height: 22),
 
-                  // 🔹 NEW FEATURE: At-Risk Student Detector
                   _buildSectionTitle('At-Risk Student Detector 📉'),
                   const SizedBox(height: 14),
                   _buildAtRiskDetector(),
@@ -112,7 +107,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
         IconButton(
           icon: const Icon(Icons.notifications_outlined, color: Colors.white),
           onPressed: () {
-            // 🔹 Make notification button accessible
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -201,7 +195,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 
-  // 🔹 FIX: Dynamic Time-based class logic
   Widget _buildTodayClasses() {
     final classes = [
       {
@@ -373,7 +366,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 
-  // 🔹 FIX: Updated Stats
   Widget _buildStatsRow() {
     final stats = [
       {
@@ -438,7 +430,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 
-  // 🔹 NEW FEATURE: Action Center (Meeting Requests)
   Widget _buildActionCenter() {
     return Container(
       decoration: BoxDecoration(
@@ -644,7 +635,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 
-  // 🔹 NEW FEATURE: AI Class Performance Insight
   Widget _buildAIInsightsCard() {
     return Container(
       padding: const EdgeInsets.all(18),
@@ -709,7 +699,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
     );
   }
 
-  // 🔹 NEW FEATURE: At-Risk Student Detector
   Widget _buildAtRiskDetector() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -977,7 +966,6 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   Widget _buildFAB() {
     return FloatingActionButton.extended(
       onPressed: () {
-        // 🔹 Make Mark Attendance feature accessible
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => const MarkAttendanceScreen()),

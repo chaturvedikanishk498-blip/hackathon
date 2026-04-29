@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-
 import 'login.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,7 +18,7 @@ void main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
-
+  print(FirebaseAuth.instance.currentUser?.uid);
   runApp(const MyApp());
 }
 

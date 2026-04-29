@@ -10,7 +10,7 @@ class StudyTimerWidget extends StatefulWidget {
 }
 
 class _StudyTimerWidgetState extends State<StudyTimerWidget> {
-  static const int focusDurationInSeconds = 25 * 60; // 25 minutes
+  static const int focusDurationInSeconds = 25 * 60; 
   int _remainingSeconds = focusDurationInSeconds;
   Timer? _timer;
   bool _isRunning = false;

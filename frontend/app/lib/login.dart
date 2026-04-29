@@ -3,7 +3,6 @@ import 'dart:math' as math;
 import 'student_dashboard.dart';
 import 'parent_dashboard.dart';
 import 'teacher_dashboard.dart';
-// import 'timetable_screen.dart';
 import 'admin_dashboard.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -391,7 +390,8 @@ class _LogInScreenState extends State<LogInScreen>
             return Expanded(
               child: GestureDetector(
                 behavior: HitTestBehavior
-                    .opaque, // Critical optimization for fully transparent Tap spaces
+                    .opaque,
+                    
                 onTap: () => _switchRole(role),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),

@@ -5,7 +5,6 @@ class ParentNotificationsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Comprehensive mock notifications covering multiple hackathon scenarios
     final notifications = [
       {'title': 'CRITICAL: Risk alert due to low attendance', 'desc': 'Attendance is currently at 55%. Immediate intervention required to prevent academic drop.', 'type': 'Urgent', 'time': '1h ago', 'color': const Color(0xFFFC5C7D), 'icon': Icons.warning_rounded},
       {'title': 'Assignment Pending', 'desc': 'Mathematics Chapter 5 assignment is due tomorrow. Please ensure it is completed.', 'type': 'Reminder', 'time': '3h ago', 'color': const Color(0xFFFF8008), 'icon': Icons.assignment_late_rounded},

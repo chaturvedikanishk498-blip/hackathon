@@ -26,7 +26,6 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
 
     setState(() => isSubmitting = true);
     
-    // Simulate network delay for the meeting request
     Future.delayed(const Duration(seconds: 2), () {
       setState(() => isSubmitting = false);
       if (mounted) {
@@ -38,7 +37,7 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
             duration: Duration(seconds: 3),
           )
         );
-        Navigator.pop(context); // Go back to dashboard on success
+        Navigator.pop(context); 
       }
     });
   }
@@ -58,7 +57,7 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Teacher Details Card
+           
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -89,7 +88,6 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
             ),
             const SizedBox(height: 24),
             
-            // Student Context Card
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -113,7 +111,7 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
             const Text('Meeting Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
             const SizedBox(height: 12),
             
-            // Date Picker
+            
             ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade300)),
@@ -140,7 +138,7 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
             ),
             const SizedBox(height: 12),
             
-            // Time Picker
+          
             ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: Colors.grey.shade300)),
@@ -165,7 +163,7 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
             ),
             const SizedBox(height: 24),
             
-            // Reason TextField
+            
             const Text('Reason for Meeting', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
             const SizedBox(height: 12),
             TextField(
@@ -182,7 +180,7 @@ class _TeacherMeetingScreenState extends State<TeacherMeetingScreen> {
             ),
             const SizedBox(height: 40),
             
-            // Submit Button
+            
             SizedBox(
               width: double.infinity,
               height: 56,
