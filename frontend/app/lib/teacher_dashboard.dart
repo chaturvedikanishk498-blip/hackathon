@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'login.dart';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'screens/teacher_notification_screen.dart';
 import 'screens/mark_attendance_screen.dart';
 import 'screens/meeting_requests_screen.dart';
+
 
 class TeacherDashboard extends StatefulWidget {
   const TeacherDashboard({super.key});
@@ -17,6 +18,7 @@ class _TeacherDashboardState extends State<TeacherDashboard>
   int _selectedIndex = 0;
   late AnimationController _animController;
 
+  
   static const Color primary = Color(0xFFFC5C7D);
   static const Color secondary = Color(0xFF6A82FB);
   static const Color bgColor = Color(0xFFFFF5F7);
@@ -55,6 +57,9 @@ class _TeacherDashboardState extends State<TeacherDashboard>
                   const SizedBox(height: 22),
                   _buildStatsRow(),
                   const SizedBox(height: 22),
+
+                  // NEW: Urgent Alerts Section (Only shows if there are unread alerts)
+                  _buildAlertsSection(),
 
                   _buildSectionTitle('Teacher Action Center'),
                   const SizedBox(height: 14),
@@ -95,6 +100,174 @@ class _TeacherDashboardState extends State<TeacherDashboard>
       floatingActionButton: _buildFAB(),
     );
   }
+
+  Widget _buildAlertsSection() {
+  return StreamBuilder<QuerySnapshot>(
+    stream: FirebaseFirestore.instance
+        .collection('alerts')
+        .where('status', isEqualTo: 'unread')
+        .snapshots(),
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return const Text('Error loading alerts');
+      }
+
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Center(child: CircularProgressIndicator()),
+        );
+      }
+
+      final alerts = snapshot.data?.docs ?? [];
+
+      if (alerts.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.notification_important, color: Colors.red),
+              const SizedBox(width: 8),
+              Text(
+                'Student Well-being Alerts',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.red[800],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
+          Column(
+            children: alerts.map((doc) {
+              final data = doc.data() as Map<String, dynamic>;
+
+              final studentName = data['studentName'] ?? 'Unknown Student';
+              final mood = data['mood'] ?? 'Not mentioned';
+              final message = data['studentMessage'] ?? data['message'] ?? 'No message';
+              final severity = data['severity'] ?? 'High';
+              final title = data['title'] ?? 'Student may be feeling pressure at home';
+              final concern = data['concern'] ?? 'Parent/Home Pressure';
+
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.red.shade300, width: 1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.08),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        CircleAvatar(
+                          backgroundColor: Colors.red[50],
+                          child: const Icon(
+                            Icons.warning_rounded,
+                            color: Colors.red,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            title,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            severity,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        '⚠️ Student Well-being Alert\n\n'
+                        'Student Name: $studentName\n'
+                        'Mood: $mood\n'
+                        'Concern: $concern\n'
+                        'Student Message: $message\n\n'
+                        'Please check in with the student privately and handle the matter sensitively.',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xFF1A1A2E),
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 12),
+
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          await FirebaseFirestore.instance
+                              .collection('alerts')
+                              .doc(doc.id)
+                              .update({'status': 'read'});
+                        },
+                        icon: const Icon(Icons.check_circle, color: Colors.green),
+                        label: const Text(
+                          'Mark Resolved',
+                          style: TextStyle(
+                            color: Colors.green,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+
+          const SizedBox(height: 8),
+        ],
+      );
+    },
+  );
+}
 
   Widget _buildHeader() {
     return SliverAppBar(

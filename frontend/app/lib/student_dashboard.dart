@@ -12,6 +12,8 @@ import 'screens/assignments_screen.dart';
 import 'screens/timetable_screen.dart';
 import 'screens/profile_screen.dart';
 
+import 'screens/mood_checkin_screen.dart';
+
 class StudentDashboard extends StatefulWidget {
   const StudentDashboard({super.key});
 
@@ -92,40 +94,39 @@ class _StudentDashboardState extends State<StudentDashboard>
   }
 
   @override
-void initState() {
-  super.initState();
+  void initState() {
+    super.initState();
 
-  final user = FirebaseAuth.instance.currentUser;
-  final email = user?.email?.toLowerCase() ?? '';
-  final uid = user?.uid;
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email?.toLowerCase() ?? '';
+    final uid = user?.uid;
 
-  _currentStudent =
-      _studentDataMap[email] ?? _studentDataMap['default']!;
+    _currentStudent = _studentDataMap[email] ?? _studentDataMap['default']!;
 
-  if(uid!=null){
-    _studentStream = FirebaseFirestore.instance
-      .collection('students')
-      .doc(uid)
-      .snapshots();
+    if(uid!=null){
+      _studentStream = FirebaseFirestore.instance
+        .collection('students')
+        .doc(uid)
+        .snapshots();
+    }
+
+    _headerAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _headerFade = Tween<double>(
+      begin:0,
+      end:1
+    ).animate(
+        CurvedAnimation(
+        parent:_headerAnim,
+        curve: Curves.easeOut
+        )
+    );
+
+    _headerAnim.forward();
   }
-
-  _headerAnim = AnimationController(
-    vsync: this,
-    duration: const Duration(milliseconds: 800),
-  );
-
-  _headerFade = Tween<double>(
-    begin:0,
-    end:1
-  ).animate(
-      CurvedAnimation(
-      parent:_headerAnim,
-      curve: Curves.easeOut
-      )
-  );
-
-  _headerAnim.forward();
-}
 
   @override
   void dispose() {
@@ -163,33 +164,24 @@ void initState() {
   }
 
   Widget _buildHomeDashboard() {
+    if(_studentStream==null){
+      return _dashboardContent();
+    }
 
-if(_studentStream==null){
- return _dashboardContent();
-}
-
-return StreamBuilder<
-DocumentSnapshot<Map<String,dynamic>>>(
-stream:_studentStream,
-builder:(context,snapshot){
-
-if(snapshot.hasData &&
-snapshot.data!.exists){
-
-final db=snapshot.data!.data()!;
-
-_currentStudent={
-..._currentStudent,
-...db
-};
-}
-
-return _dashboardContent();
-
-},
-);
-
-}
+    return StreamBuilder<DocumentSnapshot<Map<String,dynamic>>>(
+      stream:_studentStream,
+      builder:(context,snapshot){
+        if(snapshot.hasData && snapshot.data!.exists){
+          final db = snapshot.data!.data()!;
+          _currentStudent = {
+            ..._currentStudent,
+            ...db
+          };
+        }
+        return _dashboardContent();
+      },
+    );
+  }
 
   Widget _buildSliverHeader() {
     return SliverAppBar(
@@ -301,136 +293,150 @@ return _dashboardContent();
   }
 
   Widget _dashboardContent() {
+    int attendanceVal = int.tryParse(_currentStudent['attendance'].toString()) ?? 100;
 
-int attendanceVal=
-int.tryParse(
-_currentStudent['attendance'].toString()
-)??100;
+    return CustomScrollView(
+      slivers:[
+        _buildSliverHeader(),
 
-return CustomScrollView(
-slivers:[
-_buildSliverHeader(),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal:20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children:[
+                const SizedBox(height:24),
 
-SliverToBoxAdapter(
-child: Padding(
-padding: const EdgeInsets.symmetric(horizontal:20),
+                _buildSectionHeader(
+                  "Today's Schedule",
+                  onTapViewAll: (){
+                    Navigator.push(context, MaterialPageRoute(builder:(_)=>const TimetableScreen()));
+                  }
+                ),
 
-child: Column(
-crossAxisAlignment:
-CrossAxisAlignment.start,
+                const SizedBox(height:14),
+                _buildTodaySchedule(),
 
-children:[
+                if(attendanceVal<75)...[
+                  const SizedBox(height:24),
+                  _buildAttendanceAlert(),
+                ],
 
-const SizedBox(height:24),
+                const SizedBox(height:24),
+                _buildStatsRow(),
 
-_buildSectionHeader(
-"Today's Schedule",
-onTapViewAll: (){
-Navigator.push(
-context,
-MaterialPageRoute(
-builder:(_)=>const TimetableScreen()
-)
-);
-}
-),
+                const SizedBox(height:24),
+                _buildMoodCheckinCard(),
 
-const SizedBox(height:14),
+                const SizedBox(height:24),
+                _buildSectionTitle('AI Insights ✨'),
+                const SizedBox(height:14),
+                _buildAIInsightsCard(),
 
-_buildTodaySchedule(),
+                const SizedBox(height:24),
+                _buildSectionTitle('Smart Study Planner 📝'),
+                const SizedBox(height:14),
+                _buildSmartStudyPlanner(),
 
-if(attendanceVal<75)...[
-const SizedBox(height:24),
-_buildAttendanceAlert(),
-],
+                const SizedBox(height:24),
+                _buildSectionTitle('Focus Mode ⏱️'),
+                const SizedBox(height:14),
+                const StudyTimerWidget(),
 
-const SizedBox(height:24),
-_buildStatsRow(),
+                const SizedBox(height:24),
+                _buildSectionTitle('Upcoming Exams ⏰'),
+                const SizedBox(height:14),
+                _buildUpcomingExams(),
 
-const SizedBox(height:24),
-_buildSectionTitle('AI Insights ✨'),
-const SizedBox(height:14),
-_buildAIInsightsCard(),
+                const SizedBox(height:24),
+                _buildSectionTitle('Subject Progress 📊'),
+                const SizedBox(height:14),
+                _buildSubjectProgress(),
 
-const SizedBox(height:24),
-_buildSectionTitle('Smart Study Planner 📝'),
-const SizedBox(height:14),
-_buildSmartStudyPlanner(),
+                const SizedBox(height:24),
+                _buildSectionTitle('Weak Subject Detection 📉'),
+                const SizedBox(height:14),
+                _buildWeakSubjectCard(),
 
-const SizedBox(height:24),
-_buildSectionTitle('Focus Mode ⏱️'),
-const SizedBox(height:14),
-const StudyTimerWidget(),
+                const SizedBox(height:24),
+                _buildSectionTitle('Current Goals 🎯'),
+                const SizedBox(height:14),
+                _buildGoalTracker(),
 
-const SizedBox(height:24),
-_buildSectionTitle('Upcoming Exams ⏰'),
-const SizedBox(height:14),
-_buildUpcomingExams(),
+                const SizedBox(height:24),
+                _buildSectionHeader(
+                  'Pending Assignments',
+                  onTapViewAll: (){
+                    Navigator.push(context, MaterialPageRoute(builder:(_)=>const AssignmentsScreen()));
+                  }
+                ),
 
-const SizedBox(height:24),
-_buildSectionTitle('Subject Progress 📊'),
-const SizedBox(height:14),
-_buildSubjectProgress(),
+                const SizedBox(height:14),
+                _buildAssignmentsList(),
 
-const SizedBox(height:24),
-_buildSectionTitle(
-'Weak Subject Detection 📉'
-),
-const SizedBox(height:14),
-_buildWeakSubjectCard(),
+                const SizedBox(height:24),
+                _buildSectionHeader(
+                  'Recent Grades',
+                  onTapViewAll: (){
+                    Navigator.push(context, MaterialPageRoute(builder:(_)=>const MarksScreen()));
+                  }
+                ),
 
-const SizedBox(height:24),
-_buildSectionTitle('Current Goals 🎯'),
-const SizedBox(height:14),
-_buildGoalTracker(),
+                const SizedBox(height:14),
+                _buildGradesList(),
 
-const SizedBox(height:24),
+                const SizedBox(height:100),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
-_buildSectionHeader(
-'Pending Assignments',
-onTapViewAll: (){
-Navigator.push(
-context,
-MaterialPageRoute(
-builder:(_)=>
-const AssignmentsScreen()
-)
-);
-}
-),
+  Widget _buildMoodCheckinCard() {
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.lightImpact();
+        Navigator.push(
+          context,
+         MaterialPageRoute(builder: (context) => MoodCheckinScreen()),
+        );
+      },
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [primary, secondary], begin: Alignment.topLeft, end: Alignment.bottomRight),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(color: primary.withOpacity(0.3), blurRadius: 14, offset: const Offset(0, 6))
+          ]
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(color: Colors.white.withOpacity(0.2), shape: BoxShape.circle),
+              child: const Icon(Icons.mood, color: Colors.white, size: 30),
+            ),
+            const SizedBox(width: 16),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Daily Mood Check-in', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 4),
+                  Text('How are you feeling today?', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.white, size: 20),
+          ],
+        ),
+      ),
+    );
+  }
 
-const SizedBox(height:14),
-
-_buildAssignmentsList(),
-
-const SizedBox(height:24),
-
-_buildSectionHeader(
-'Recent Grades',
-onTapViewAll: (){
-Navigator.push(
-context,
-MaterialPageRoute(
-builder:(_)=>const MarksScreen()
-)
-);
-}
-),
-
-const SizedBox(height:14),
-
-_buildGradesList(),
-
-const SizedBox(height:100),
-
-],
-),
-),
-),
-],
-);
-
-}
   Widget _buildAttendanceAlert() {
     return Container(
       padding: const EdgeInsets.all(16),
@@ -475,27 +481,9 @@ const SizedBox(height:100),
 
   Widget _buildNotificationSheet() {
     final notifications = [
-      {
-        'title': 'Math Final Exam Tomorrow',
-        'subtitle': 'Prepare well – exam at 10:00 AM',
-        'color': const Color(0xFFFC5C7D),
-        'icon': Icons.priority_high_rounded,
-        'type': 'High',
-      },
-      {
-        'title': 'Chemistry Lab Report Missing',
-        'subtitle': 'Submit before 5:00 PM today',
-        'color': const Color(0xFFFF8008),
-        'icon': Icons.assignment_late_rounded,
-        'type': 'Medium',
-      },
-      {
-        'title': 'New Timetable Updated',
-        'subtitle': 'Check your updated schedule',
-        'color': const Color(0xFF667EEA),
-        'icon': Icons.calendar_today_rounded,
-        'type': 'Info',
-      },
+      {'title': 'Math Final Exam Tomorrow', 'subtitle': 'Prepare well – exam at 10:00 AM', 'color': const Color(0xFFFC5C7D), 'icon': Icons.priority_high_rounded, 'type': 'High'},
+      {'title': 'Chemistry Lab Report Missing', 'subtitle': 'Submit before 5:00 PM today', 'color': const Color(0xFFFF8008), 'icon': Icons.assignment_late_rounded, 'type': 'Medium'},
+      {'title': 'New Timetable Updated', 'subtitle': 'Check your updated schedule', 'color': const Color(0xFF667EEA), 'icon': Icons.calendar_today_rounded, 'type': 'Info'},
     ];
 
     return Container(
@@ -513,35 +501,22 @@ const SizedBox(height:100),
               width: 40,
               height: 4,
               margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: Colors.black12,
-                borderRadius: BorderRadius.circular(10),
-              ),
+              decoration: BoxDecoration(color: Colors.black12, borderRadius: BorderRadius.circular(10)),
             ),
           ),
-          const Text(
-            'Notifications 🔔',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E)),
-          ),
+          const Text('Notifications 🔔', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF1A1A2E))),
           const SizedBox(height: 16),
           ...notifications.map((n) {
             final color = n['color'] as Color;
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: color.withOpacity(0.25), width: 1.2),
-              ),
+              decoration: BoxDecoration(color: color.withOpacity(0.06), borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.25), width: 1.2)),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(9),
-                    decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(12)),
                     child: Icon(n['icon'] as IconData, color: color, size: 20),
                   ),
                   const SizedBox(width: 14),
@@ -551,25 +526,13 @@ const SizedBox(height:100),
                       children: [
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: color.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            n['type'] as String,
-                            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
-                          ),
+                          decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(4)),
+                          child: Text(n['type'] as String, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
                         ),
                         const SizedBox(height: 5),
-                        Text(
-                          n['title'] as String,
-                          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E)),
-                        ),
+                        Text(n['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E))),
                         const SizedBox(height: 2),
-                        Text(
-                          n['subtitle'] as String,
-                          style: const TextStyle(fontSize: 12, color: Colors.black45),
-                        ),
+                        Text(n['subtitle'] as String, style: const TextStyle(fontSize: 12, color: Colors.black45)),
                       ],
                     ),
                   ),
@@ -589,10 +552,7 @@ const SizedBox(height:100),
         _buildSectionTitle(title),
         GestureDetector(
           onTap: onTapViewAll,
-          child: const Text(
-            "View All >",
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: primary),
-          ),
+          child: const Text("View All >", style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: primary)),
         ),
       ],
     );
@@ -616,9 +576,7 @@ const SizedBox(height:100),
             width: 150,
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
-              gradient: isNow
-                  ? const LinearGradient(colors: [primary, secondary], begin: Alignment.topLeft, end: Alignment.bottomRight)
-                  : null,
+              gradient: isNow ? const LinearGradient(colors: [primary, secondary], begin: Alignment.topLeft, end: Alignment.bottomRight) : null,
               color: isNow ? null : cardBg,
               borderRadius: BorderRadius.circular(18),
               boxShadow: [BoxShadow(color: isNow ? primary.withOpacity(0.35) : Colors.black.withOpacity(0.06), blurRadius: 16, offset: const Offset(0, 6))],
@@ -821,11 +779,7 @@ const SizedBox(height:100),
 
     return Container(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: cardBg,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))],
-      ),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 4))]),
       child: Column(
         children: subjects.map((s) {
           final color = s['color'] as Color;
@@ -844,12 +798,7 @@ const SizedBox(height:100),
                 const SizedBox(height: 8),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    value: s['progress'] as double,
-                    minHeight: 8,
-                    backgroundColor: color.withOpacity(0.1),
-                    valueColor: AlwaysStoppedAnimation(color),
-                  ),
+                  child: LinearProgressIndicator(value: s['progress'] as double, minHeight: 8, backgroundColor: color.withOpacity(0.1), valueColor: AlwaysStoppedAnimation(color)),
                 ),
               ],
             ),
@@ -873,10 +822,7 @@ const SizedBox(height:100),
         children: [
           Container(
             padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [primary, secondary], begin: Alignment.topLeft, end: Alignment.bottomRight),
-              borderRadius: BorderRadius.circular(14),
-            ),
+            decoration: BoxDecoration(gradient: const LinearGradient(colors: [primary, secondary], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(14)),
             child: const Icon(Icons.insights_rounded, color: Colors.white, size: 24),
           ),
           const SizedBox(width: 16),
@@ -897,11 +843,7 @@ const SizedBox(height:100),
 
   Widget _buildWeakSubjectCard() {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFFC5C7D).withOpacity(0.06),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFFC5C7D).withOpacity(0.4), width: 1.5),
-      ),
+      decoration: BoxDecoration(color: const Color(0xFFFC5C7D).withOpacity(0.06), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFFFC5C7D).withOpacity(0.4), width: 1.5)),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -954,81 +896,42 @@ const SizedBox(height:100),
   }
 
   Widget _buildAssignmentsList(){
+    String studentClass = _currentStudent['class'];
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance.collection('assignments').where('class', isEqualTo:studentClass).snapshots(),
+      builder:(context,snapshot){
+        if(!snapshot.hasData) return const Center(child:CircularProgressIndicator());
+        final docs=snapshot.data!.docs;
+        if(docs.isEmpty) return const Text("No assignments");
 
-String studentClass=
-_currentStudent['class'];
+        return Column(
+          children: docs.map((doc){
+            final a = doc.data() as Map<String,dynamic>;
+            return Container(
+              margin: const EdgeInsets.only(bottom:12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(color:cardBg, borderRadius: BorderRadius.circular(18)),
+              child: Row(
+                children:[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children:[
+                        Text(a['subject'] ?? ''),
+                        Text(a['title'] ?? ''),
+                      ],
+                    ),
+                  ),
+                  Text(a['due'] ?? ''),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
 
-return StreamBuilder<QuerySnapshot>(
-stream: FirebaseFirestore.instance
-.collection('assignments')
-.where(
-'class',
-isEqualTo:studentClass
-)
-.snapshots(),
-
-builder:(context,snapshot){
-
-if(!snapshot.hasData){
-return const Center(
-child:CircularProgressIndicator()
-);
-}
-
-final docs=snapshot.data!.docs;
-
-if(docs.isEmpty){
-return const Text(
-"No assignments"
-);
-}
-
-return Column(
-children: docs.map((doc){
-
-final a=
-doc.data()
-as Map<String,dynamic>;
-
-return Container(
-margin:
-const EdgeInsets.only(bottom:12),
-
-padding:
-const EdgeInsets.all(16),
-
-decoration: BoxDecoration(
-color:cardBg,
-borderRadius:
-BorderRadius.circular(18),
-),
-
-child: Row(
-children:[
-
-Expanded(
-child: Column(
-crossAxisAlignment:
-CrossAxisAlignment.start,
-children:[
-Text(a['subject']),
-Text(a['title']),
-],
-),
-),
-
-Text(a['due']),
-],
-),
-);
-
-}).toList(),
-);
-
-},
-);
-
-}
   Widget _buildGradesList() {
     final grades = [
       {'subject': 'Mathematics', 'grade': 'A+', 'marks': '95/100', 'color': const Color(0xFF667EEA)},
@@ -1049,49 +952,6 @@ Text(a['due']),
               Expanded(child: Text(g['subject'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Color(0xFF1A1A2E)))),
               Text(g['marks'] as String, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.black45)),
             ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildSmartNotifications() {
-    final msgs = [
-      {'title': 'Math Final Exam Tomorrow', 'type': 'High', 'color': const Color(0xFFFC5C7D), 'icon': Icons.priority_high_rounded},
-      {'title': 'Chemistry Lab Report Missing', 'type': 'Medium', 'color': const Color(0xFFFF8008), 'icon': Icons.assignment_late_rounded},
-    ];
-    
-    return Column(
-      children: msgs.map((m) {
-        final color = m['color'] as Color;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: color.withOpacity(0.3), width: 1.5), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 3))]),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => HapticFeedback.selectionClick(),
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  children: [
-                    Container(padding: const EdgeInsets.all(10), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(m['icon'] as IconData, color: color, size: 20)),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(4)), child: Text(m['type'] as String, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold))),
-                          const SizedBox(height: 6),
-                          Text(m['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF1A1A2E))),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
           ),
         );
       }).toList(),

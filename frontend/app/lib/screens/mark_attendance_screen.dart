@@ -22,19 +22,26 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
   void _submitAttendance() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Attendance submitted successfully! ✅', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Text(
+          'Attendance submitted successfully! ✅',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         backgroundColor: Color(0xFF11998E),
         behavior: SnackBarBehavior.floating,
       ),
     );
-    Navigator.pop(context); 
+    Navigator.pop(context);
+  } // ✅ function yaha close ho gaya
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFFFF5F7),
       appBar: AppBar(
-        title: const Text('Mark Attendance', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: const Text(
+          'Mark Attendance',
+          style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+        ),
         backgroundColor: const Color(0xFFFC5C7D),
         iconTheme: const IconThemeData(color: Colors.white),
         elevation: 0,
@@ -44,7 +51,14 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Select Class', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
+            const Text(
+              'Select Class',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A2E),
+              ),
+            ),
             const SizedBox(height: 12),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -60,17 +74,29 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                   items: classes.map((String c) {
                     return DropdownMenuItem<String>(
                       value: c,
-                      child: Text('Class $c', style: const TextStyle(fontWeight: FontWeight.w600)),
+                      child: Text(
+                        'Class $c',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
                     );
                   }).toList(),
                   onChanged: (String? newValue) {
-                    if (newValue != null) setState(() => selectedClass = newValue);
+                    if (newValue != null) {
+                      setState(() => selectedClass = newValue);
+                    }
                   },
                 ),
               ),
             ),
             const SizedBox(height: 24),
-            const Text('Student List', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1A1A2E))),
+            const Text(
+              'Student List',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1A1A2E),
+              ),
+            ),
             const SizedBox(height: 12),
             Expanded(
               child: ListView.builder(
@@ -83,12 +109,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 8, offset: const Offset(0, 3))],
                     ),
                     child: CheckboxListTile(
                       activeColor: const Color(0xFF11998E),
-                      title: Text(s['name'], style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
-                      subtitle: Text('Roll No: ${s['roll']}', style: const TextStyle(fontSize: 12, color: Colors.black54)),
+                      title: Text(s['name']),
+                      subtitle: Text('Roll No: ${s['roll']}'),
                       value: s['isPresent'],
                       onChanged: (bool? value) {
                         if (value != null) {
@@ -108,10 +133,11 @@ class _MarkAttendanceScreenState extends State<MarkAttendanceScreen> {
                 onPressed: _submitAttendance,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFFC5C7D),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 4,
                 ),
-                child: const Text('Submit Attendance', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                child: const Text(
+                  'Submit Attendance',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ],
